@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Construction Material Quantity Calculator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Define Calidwell Homes brand colors as CSS variables */
+        :root {
+            --calidwell-primary-accent: #30C7B5;
+            --calidwell-secondary-accent: #00AC97;
+            --calidwell-dark-text: #14261C;
+            --calidwell-general-text: #4F5655;
+            --calidwell-light-bg-1: #F3F6F3;
+            --calidwell-light-bg-2: #F6F7F8;
+            --calidwell-white: #FFFFFF;
+            --calidwell-border-grey: #dddddd; /* From their CSS */
+            --calidwell-red-error: #ef4444; /* Keeping red for clear error/disposal indication */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--calidwell-light-bg-1); /* Lightest background */
+        }
+
+        /* Custom styling for inputs to make them more visible */
+        .quantity-input {
+            padding: 0.75rem; /* Increased padding */
+            border-width: 2px; /* Thicker border */
+            border-color: var(--calidwell-border-grey); /* Default border color */
+            border-radius: 0.375rem; /* Rounded corners */
+            width: 100%;
+            transition: all 0.2s ease-in-out; /* Smooth transition for focus */
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        }
+        .quantity-input:focus {
+            border-color: var(--calidwell-primary-accent); /* Calidwell primary accent on focus */
+            box-shadow: 0 0 0 3px rgba(48, 199, 181, 0.5); /* Semi-transparent primary accent shadow on focus */
+            outline: none; /* Remove default outline */
+        }
+
+        /* Hide the up/down arrows for number inputs (spin buttons) */
+        /* For Chrome, Safari, Edge, Opera */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        /* For Firefox */
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 md:p-8">
+    <div class="max-w-6xl mx-auto bg-white p-6 md:p-8 rounded-lg shadow-xl">
+        <h1 class="text-3xl font-bold text-[var(--calidwell-dark-text)] mb-6 text-center">Construction Material Quantity Calculator</h1>
+
+        <!-- Material Properties & Bulking Factors (Reference Section) -->
+        <div class="mb-8 p-4 bg-[var(--calidwell-light-bg-2)] rounded-lg border border-[var(--calidwell-border-grey)]">
+            <h2 class="text-xl font-semibold text-[var(--calidwell-dark-text)] mb-4">1. Material Properties & Bulking Factors (Assumptions)</h2>
+            <p class="text-sm text-[var(--calidwell-general-text)] mb-2">These values are used for calculations. Adjust them if your specific materials or site conditions differ.</p>
+            <table class="min-w-full bg-white rounded-md overflow-hidden">
+                <thead class="bg-[var(--calidwell-light-bg-1)]">
+                    <tr>
+                        <th class="py-2 px-3 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider rounded-tl-md">Material Type</th>
+                        <th class="py-2 px-3 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider">In-Situ Density (tonnes/m³)</th>
+                        <th class="py-2 px-3 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider rounded-tr-md">Bulking Factor</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 text-sm text-[var(--calidwell-dark-text)]">
+                    <tr><td class="py-2 px-3">Concrete</td><td class="py-2 px-3">2.4</td><td class="py-2 px-3">N/A (1.0)</td></tr>
+                    <tr><td class="py-2 px-3">Clay</td><td class="py-2 px-3">1.7</td><td class="py-2 px-3">1.35</td></tr>
+                    <tr><td class="py-2 px-3">Soil</td><td class="py-2 px-3">1.6</td><td class="py-2 px-3">1.25</td></tr>
+                    <tr><td class="py-2 px-3">Rock/Bricks</td><td class="py-2 px-3">1.8</td><td class="py-2 px-3">1.50</td></tr>
+                    <tr><td class="py-2 px-3">Sand/Gravel</td><td class="py-2 px-3">1.9</td><td class="py-2 px-3">1.10</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Quantity & Weight Calculations Section -->
+        <h2 class="text-xl font-semibold text-[var(--calidwell-dark-text)] mb-4">2. Quantity & Weight Calculations</h2>
+        <div class="overflow-x-auto rounded-lg shadow-sm border border-[var(--calidwell-border-grey)] mb-8">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-[var(--calidwell-light-bg-1)]">
+                    <tr>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider">Item/Description</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider min-w-[100px]">Length (m)</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider min-w-[100px]">Width (m)</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider min-w-[100px]">Depth (m)</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider min-w-[140px]">Material Type</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider">Calculated Volume (m³)</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider">Material Weight (tonnes)</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider">Excavated Volume (m³)</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider">Excavated Weight (tonnes)</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="itemsContainer" class="bg-white divide-y divide-gray-200 text-sm text-[var(--calidwell-dark-text)]">
+                    <!-- Initial row goes here -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4 mb-8">
+            <button id="addItemBtn" class="w-full sm:w-auto bg-[var(--calidwell-primary-accent)] hover:bg-[var(--calidwell-secondary-accent)] text-white font-bold py-3 px-6 rounded-md shadow-lg transition duration-200 ease-in-out transform hover:scale-105">
+                Add Item
+            </button>
+            <button id="calculateAllBtn" class="w-full sm:w-auto bg-[var(--calidwell-primary-accent)] hover:bg-[var(--calidwell-secondary-accent)] text-white font-bold py-3 px-6 rounded-md shadow-lg transition duration-200 ease-in-out transform hover:scale-105">
+                Calculate All
+            </button>
+        </div>
+
+        <!-- Summaries Section -->
+        <div class="mt-8 p-6 bg-[var(--calidwell-light-bg-2)] rounded-lg border border-[var(--calidwell-border-grey)] shadow-md">
+            <h2 class="text-xl font-semibold text-[var(--calidwell-dark-text)] mb-4">3. Summaries</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="flex justify-between items-center bg-white p-4 rounded-md shadow-sm border border-[var(--calidwell-border-grey)]">
+                    <span class="text-[var(--calidwell-general-text)] font-medium">Total Concrete Required:</span>
+                    <span id="totalConcreteVolume" class="text-[var(--calidwell-secondary-accent)] font-bold text-lg">0.00 m³</span>
+                </div>
+                <div class="flex justify-between items-center bg-white p-4 rounded-md shadow-sm border border-[var(--calidwell-border-grey)]">
+                    <span class="text-[var(--calidwell-general-text)] font-medium">Total Concrete Weight:</span>
+                    <span id="totalConcreteWeight" class="text-[var(--calidwell-secondary-accent)] font-bold text-lg">0.00 tonnes</span>
+                </div>
+                <div class="flex justify-between items-center bg-white p-4 rounded-md shadow-sm border border-[var(--calidwell-border-grey)]">
+                    <span class="text-[var(--calidwell-general-text)] font-medium">Total Excavated Material (Bulked):</span>
+                    <span id="totalExcavatedVolume" class="text-[var(--calidwell-red-error)] font-bold text-lg">0.00 m³</span>
+                </div>
+                <div class="flex justify-between items-center bg-white p-4 rounded-md shadow-sm border border-[var(--calidwell-border-grey)]">
+                    <span class="text-[var(--calidwell-general-text)] font-medium">Total Excavated Weight (for disposal):</span>
+                    <span id="totalExcavatedWeight" class="text-[var(--calidwell-red-error)] font-bold text-lg">0.00 tonnes</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Temporary workaround for reported "ReferenceError: createItem is not defined".
+        // This function is not part of the intended logic for this application.
+        // The primary function for adding new rows is 'createItemRow'.
+        function createItem() {
+            console.warn("Attempted to call 'createItem()'. This function is not part of the application's intended logic. Please use 'createItemRow()' instead for adding new items.");
+        }
+
+        // Define material properties
+        const materialProperties = {
+            "Concrete": { density: 2.4, bulkingFactor: 1 }, // Bulking factor 1 for concrete as it's not excavated
+            "Clay": { density: 1.7, bulkingFactor: 1.35 },
+            "Soil": { density: 1.6, bulkingFactor: 1.25 },
+            "Rock/Bricks": { density: 1.8, bulkingFactor: 1.50 },
+            "Sand/Gravel": { density: 1.9, bulkingFactor: 1.10 }
+        };
+
+        const itemsContainer = document.getElementById('itemsContainer');
+        const addItemBtn = document.getElementById('addItemBtn');
+        const calculateAllBtn = document.getElementById('calculateAllBtn');
+
+        let itemCounter = 0; // To keep track of unique IDs for rows
+
+        // Function to create a new row for an item
+        function createItemRow(initialValues = {}) {
+            itemCounter++;
+            const row = document.createElement('tr');
+            row.id = `item-row-${itemCounter}`;
+            row.className = 'hover:bg-gray-50'; // Keeping gray hover for neutrality
+
+            // Adjusted min-w for Length, Width, Depth and added for Material Type
+            row.innerHTML = `
+                <td class="py-2 px-4 whitespace-nowrap">
+                    <input type="text" name="description" value="${initialValues.description || ''}" placeholder="Footing 1" class="quantity-input text-[var(--calidwell-dark-text)]">
+                </td>
+                <td class="py-2 px-4 whitespace-nowrap min-w-[100px]">
+                    <input type="number" step="0.01" name="length" value="${initialValues.length || ''}" placeholder="0.00" class="quantity-input text-[var(--calidwell-dark-text)]">
+                </td>
+                <td class="py-2 px-4 whitespace-nowrap min-w-[100px]">
+                    <input type="number" step="0.01" name="width" value="${initialValues.width || ''}" placeholder="0.00" class="quantity-input text-[var(--calidwell-dark-text)]">
+                </td>
+                <td class="py-2 px-4 whitespace-nowrap min-w-[100px]">
+                    <input type="number" step="0.01" name="depth" value="${initialValues.depth || ''}" placeholder="0.00" class="quantity-input text-[var(--calidwell-dark-text)]">
+                </td>
+                <td class="py-2 px-4 whitespace-nowrap min-w-[140px]">
+                    <select name="materialType" class="quantity-input text-[var(--calidwell-dark-text)]">
+                        <option value="">Select Type</option>
+                        ${Object.keys(materialProperties).map(type => `<option value="${type}" ${initialValues.materialType === type ? 'selected' : ''}>${type}</option>`).join('')}
+                    </select>
+                </td>
+                <td class="py-2 px-4 whitespace-nowrap">
+                    <span class="calculated-volume text-[var(--calidwell-general-text)] font-medium">0.00</span>
+                </td>
+                <td class="py-2 px-4 whitespace-nowrap">
+                    <span class="material-weight text-[var(--calidwell-general-text)] font-medium">0.00</span>
+                </td>
+                <td class="py-2 px-4 whitespace-nowrap">
+                    <span class="excavated-volume text-[var(--calidwell-general-text)] font-medium">0.00</span>
+                </td>
+                <td class="py-2 px-4 whitespace-nowrap">
+                    <span class="excavated-weight text-[var(--calidwell-general-text)] font-medium">0.00</span>
+                </td>
+                <td class="py-2 px-4 whitespace-nowrap">
+                    <button class="remove-item-btn bg-[var(--calidwell-primary-accent)] hover:bg-[var(--calidwell-secondary-accent)] text-white p-2 rounded-md transition duration-200 ease-in-out transform hover:scale-105">Remove</button>
+                </td>
+            `;
+            itemsContainer.appendChild(row);
+
+            // Add event listeners to input fields within the new row
+            const inputs = row.querySelectorAll('input[type="number"], select[name="materialType"]');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => calculateItem(row));
+            });
+
+            // Add event listener for the remove button
+            const removeBtn = row.querySelector('.remove-item-btn');
+            removeBtn.addEventListener('click', () => {
+                row.remove();
+                calculateAll(); // Recalculate totals after removing a row
+            });
+
+            // Perform initial calculation if initialValues are provided
+            if (initialValues.length && initialValues.width && initialValues.depth && initialValues.materialType) {
+                calculateItem(row);
+            }
+        }
+
+        // Function to calculate values for a single item row
+        function calculateItem(row) {
+            const length = parseFloat(row.querySelector('input[name="length"]').value);
+            const width = parseFloat(row.querySelector('input[name="width"]').value);
+            const depth = parseFloat(row.querySelector('input[name="depth"]').value);
+            const materialType = row.querySelector('select[name="materialType"]').value;
+
+            const calculatedVolumeSpan = row.querySelector('.calculated-volume');
+            const materialWeightSpan = row.querySelector('.material-weight');
+            const excavatedVolumeSpan = row.querySelector('.excavated-volume');
+            const excavatedWeightSpan = row.querySelector('.excavated-weight');
+
+            let calculatedVolume = 0;
+            let materialWeight = 0;
+            let excavatedVolume = 0;
+            let excavatedWeight = 0;
+
+            if (isNaN(length) || isNaN(width) || isNaN(depth) || !materialType) {
+                calculatedVolumeSpan.textContent = '0.00';
+                materialWeightSpan.textContent = '0.00';
+                excavatedVolumeSpan.textContent = '0.00';
+                excavatedWeightSpan.textContent = '0.00';
+                return; // Exit if inputs are invalid
+            }
+
+            calculatedVolume = length * width * depth;
+            calculatedVolumeSpan.textContent = calculatedVolume.toFixed(2);
+
+            const properties = materialProperties[materialType];
+
+            if (properties) {
+                if (materialType === "Concrete") {
+                    materialWeight = calculatedVolume * properties.density;
+                    materialWeightSpan.textContent = materialWeight.toFixed(2);
+                    excavatedVolumeSpan.textContent = '0.00'; // No excavation volume for concrete
+                    excavatedWeightSpan.textContent = '0.00'; // No excavation weight for concrete
+                } else {
+                    materialWeightSpan.textContent = '0.00'; // Material weight not applicable for excavated material
+                    excavatedVolume = calculatedVolume * properties.bulkingFactor;
+                    excavatedWeight = calculatedVolume * properties.density * properties.bulkingFactor; // In-situ weight * bulking factor
+                    excavatedVolumeSpan.textContent = excavatedVolume.toFixed(2);
+                    excavatedWeightSpan.textContent = excavatedWeight.toFixed(2);
+                }
+            } else {
+                // Reset if material type is not recognized (shouldn't happen with dropdown)
+                materialWeightSpan.textContent = '0.00';
+                excavatedVolumeSpan.textContent = '0.00';
+                excavatedWeightSpan.textContent = '0.00';
+            }
+            calculateAll(); // Update total summaries after each item calculation
+        }
+
+        // Function to calculate and update all summaries
+        function calculateAll() {
+            let totalConcreteVolume = 0;
+            let totalConcreteWeight = 0;
+            let totalExcavatedVolume = 0;
+            let totalExcavatedWeight = 0;
+
+            const rows = itemsContainer.querySelectorAll('tr');
+            rows.forEach(row => {
+                const materialType = row.querySelector('select[name="materialType"]').value;
+                const calculatedVolume = parseFloat(row.querySelector('.calculated-volume').textContent);
+                const materialWeight = parseFloat(row.querySelector('.material-weight').textContent);
+                const excavatedVolume = parseFloat(row.querySelector('.excavated-volume').textContent);
+                const excavatedWeight = parseFloat(row.querySelector('.excavated-weight').textContent);
+
+                if (!isNaN(calculatedVolume)) {
+                    if (materialType === "Concrete") {
+                        totalConcreteVolume += calculatedVolume;
+                        totalConcreteWeight += materialWeight;
+                    } else {
+                        totalExcavatedVolume += excavatedVolume;
+                        totalExcavatedWeight += excavatedWeight;
+                    }
+                }
+            });
+
+            document.getElementById('totalConcreteVolume').textContent = totalConcreteVolume.toFixed(2) + ' m³';
+            document.getElementById('totalConcreteWeight').textContent = totalConcreteWeight.toFixed(2) + ' tonnes';
+            document.getElementById('totalExcavatedVolume').textContent = totalExcavatedVolume.toFixed(2) + ' m³';
+            document.getElementById('totalExcavatedWeight').textContent = totalExcavatedWeight.toFixed(2) + ' tonnes';
+        }
+
+        // Event listeners for buttons
+        addItemBtn.addEventListener('click', () => createItemRow());
+        calculateAllBtn.addEventListener('click', calculateAll);
+
+        // Add an initial row when the page loads
+        createItemRow({ description: 'Footing 1', length: 9, width: 0.6, depth: 1, materialType: 'Concrete' });
+        createItemRow({ description: 'Oversite Dig', length: 9.3, width: 2.8, depth: 0.3, materialType: 'Soil' });
+        createItemRow(); // Blank row for new entry
+    </script>
+</body>
+</html> 
