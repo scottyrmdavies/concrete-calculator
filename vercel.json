@@ -1,0 +1,11 @@
+{
+  "buildCommand": "",
+  "outputDirectory": "brick-block-calculator",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/brick-block-calculator/index.html"
+    }
+  ]
+} 
