@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calidwell Homes - Construction Calculators</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Define Calidwell Homes brand colors as CSS variables */
+        :root {
+            --calidwell-primary-accent: #30C7B5;
+            --calidwell-secondary-accent: #00AC97;
+            --calidwell-dark-text: #14261C;
+            --calidwell-general-text: #4F5655;
+            --calidwell-light-bg-1: #F3F6F3;
+            --calidwell-light-bg-2: #F6F7F8;
+            --calidwell-white: #FFFFFF;
+            --calidwell-border-grey: #dddddd;
+            --calidwell-red-error: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--calidwell-light-bg-1);
+        }
+
+        .calculator-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .calculator-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary {
+            background-color: var(--calidwell-primary-accent);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--calidwell-secondary-accent);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-4xl w-full">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-[var(--calidwell-dark-text)] mb-4">
+                Calidwell Homes
+            </h1>
+            <h2 class="text-2xl md:text-3xl font-semibold text-[var(--calidwell-primary-accent)] mb-6">
+                Construction Calculators
+            </h2>
+            <p class="text-lg text-[var(--calidwell-general-text)] max-w-2xl mx-auto">
+                Professional construction material calculators for accurate project planning and cost estimation.
+            </p>
+        </div>
+
+        <!-- Calculator Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            <!-- Material Quantity Calculator -->
+            <div class="calculator-card bg-white rounded-xl shadow-lg p-8 border border-[var(--calidwell-border-grey)]" onclick="openCalculator('calculator.html')">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-[var(--calidwell-primary-accent)] rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-[var(--calidwell-dark-text)] mb-4">
+                        Material Quantity Calculator
+                    </h3>
+                    <p class="text-[var(--calidwell-general-text)] mb-6 leading-relaxed">
+                        Calculate concrete volumes, excavation quantities, and material weights for foundations, footings, and earthworks. Includes bulking factors for accurate disposal planning.
+                    </p>
+                    <div class="space-y-2 text-sm text-[var(--calidwell-general-text)]">
+                        <div class="flex items-center justify-center">
+                            <span class="w-2 h-2 bg-[var(--calidwell-primary-accent)] rounded-full mr-2"></span>
+                            Concrete volume & weight calculations
+                        </div>
+                        <div class="flex items-center justify-center">
+                            <span class="w-2 h-2 bg-[var(--calidwell-primary-accent)] rounded-full mr-2"></span>
+                            Excavation with bulking factors
+                        </div>
+                        <div class="flex items-center justify-center">
+                            <span class="w-2 h-2 bg-[var(--calidwell-primary-accent)] rounded-full mr-2"></span>
+                            Multiple material types
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wall Material Estimator -->
+            <div class="calculator-card bg-white rounded-xl shadow-lg p-8 border border-[var(--calidwell-border-grey)]" onclick="openCalculator('brick-block-calculator/index.html')">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-[var(--calidwell-secondary-accent)] rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-[var(--calidwell-dark-text)] mb-4">
+                        Wall Material Estimator
+                    </h3>
+                    <p class="text-[var(--calidwell-general-text)] mb-6 leading-relaxed">
+                        Estimate bricks, blocks, sand, and cement quantities for wall construction. Supports single and double wall thickness with opening deductions.
+                    </p>
+                    <div class="space-y-2 text-sm text-[var(--calidwell-general-text)]">
+                        <div class="flex items-center justify-center">
+                            <span class="w-2 h-2 bg-[var(--calidwell-secondary-accent)] rounded-full mr-2"></span>
+                            Bricks or blocks calculation
+                        </div>
+                        <div class="flex items-center justify-center">
+                            <span class="w-2 h-2 bg-[var(--calidwell-secondary-accent)] rounded-full mr-2"></span>
+                            Sand & cement estimates
+                        </div>
+                        <div class="flex items-center justify-center">
+                            <span class="w-2 h-2 bg-[var(--calidwell-secondary-accent)] rounded-full mr-2"></span>
+                            Pack & bag quantities
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-[var(--calidwell-general-text)]">
+            <p class="text-sm">
+                Professional construction calculators for accurate project planning
+            </p>
+            <p class="text-xs mt-2 opacity-75">
+                Calidwell Homes Construction Tools
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function openCalculator(url) {
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>
