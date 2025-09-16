@@ -263,7 +263,8 @@
                 } else {
                     materialWeightSpan.textContent = '0.00'; // Material weight not applicable for excavated material
                     excavatedVolume = calculatedVolume * properties.bulkingFactor;
-                    excavatedWeight = calculatedVolume * properties.density * properties.bulkingFactor; // In-situ weight * bulking factor
+                    // Weight should not increase with bulking; mass is conserved. Use in-situ density only.
+                    excavatedWeight = calculatedVolume * properties.density;
                     excavatedVolumeSpan.textContent = excavatedVolume.toFixed(2);
                     excavatedWeightSpan.textContent = excavatedWeight.toFixed(2);
                 }
