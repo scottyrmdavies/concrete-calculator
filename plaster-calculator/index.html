@@ -68,6 +68,7 @@
                         <th>Type</th>
                         <th>Length (m)</th>
                         <th>Height/Width (m)</th>
+                        <th>Openings (m²)</th>
                         <th>Area (m²)</th>
                         <th>Boards</th>
                         <th>Skim (bags)</th>
@@ -130,7 +131,7 @@
             return Math.ceil(boards / 5);
         }
 
-        function createAreaRow(desc = 'Area', type = 'Wall', length = 3.0, height = 2.4) {
+        function createAreaRow(desc = 'Area', type = 'Wall', length = 3.0, height = 2.4, openings = 0) {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><input type="text" class="desc-input" value="${desc}" style="width:100%; border:1px solid var(--calidwell-border-grey); border-radius:8px; padding:8px 10px;"></td>
@@ -142,6 +143,7 @@
                 </td>
                 <td><input type="number" step="0.1" class="length-input" value="${length}"></td>
                 <td><input type="number" step="0.1" class="height-input" value="${height}"></td>
+                <td><input type="number" step="0.1" min="0" class="openings-input" value="${openings}"></td>
                 <td class="area-cell">0.00</td>
                 <td class="boards-cell">0</td>
                 <td class="skim-cell">0</td>
@@ -156,7 +158,9 @@
         function calculateRow(tr) {
             const length = parseFloat(tr.querySelector('.length-input').value) || 0;
             const height = parseFloat(tr.querySelector('.height-input').value) || 0;
-            const area = Math.max(0, length * height);
+            const openings = Math.max(0, parseFloat(tr.querySelector('.openings-input').value) || 0);
+            const gross = Math.max(0, length * height);
+            const area = Math.max(0, gross - openings);
             const boards = boardsFromArea(area);
             const skimBags = skimBagsFromArea(area);
             tr.querySelector('.area-cell').textContent = area.toFixed(2);
@@ -189,8 +193,8 @@
         document.getElementById('skimThicknessMm').addEventListener('input', calculateAll);
 
         // Initial rows
-        createAreaRow('Wall 1', 'Wall', 4.0, 2.4);
-        createAreaRow('Ceiling 1', 'Ceiling', 4.0, 3.0);
+        createAreaRow('Wall 1', 'Wall', 4.0, 2.4, 0);
+        createAreaRow('Ceiling 1', 'Ceiling', 4.0, 3.0, 0);
         calculateAll();
     </script>
 </body>
