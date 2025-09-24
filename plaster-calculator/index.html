@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plaster Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --calidwell-primary-accent: #30C7B5;
+            --calidwell-secondary-accent: #00AC97;
+            --calidwell-dark-text: #14261C;
+            --calidwell-general-text: #4F5655;
+            --calidwell-light-bg-1: #F3F6F3;
+            --calidwell-light-bg-2: #F6F7F8;
+            --calidwell-white: #FFFFFF;
+            --calidwell-border-grey: #dddddd;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--calidwell-light-bg-1); }
+        .container { background: var(--calidwell-white); max-width: 1100px; margin: 24px auto; padding: 24px; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+        h1 { color: var(--calidwell-dark-text); text-align: center; font-weight: 800; margin-bottom: 18px; }
+        .section { background: var(--calidwell-light-bg-2); border: 1px solid var(--calidwell-border-grey); border-radius: 10px; padding: 16px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid var(--calidwell-border-grey); padding: 10px 12px; text-align: left; }
+        th { background: var(--calidwell-light-bg-1); color: var(--calidwell-general-text); font-size: 0.85rem; text-transform: uppercase; }
+        input[type="number"], select { width: 100%; border: 1px solid var(--calidwell-border-grey); border-radius: 8px; padding: 10px 12px; background: var(--calidwell-white); color: var(--calidwell-dark-text); }
+        input[type="number"] { -moz-appearance: textfield; }
+        input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .btn { background: var(--calidwell-primary-accent); color: #fff; padding: 10px 16px; border-radius: 8px; font-weight: 700; transition: .2s; }
+        .btn:hover { background: var(--calidwell-secondary-accent); transform: scale(1.03); }
+        .summary-card { background:#fff; border:1px solid var(--calidwell-border-grey); border-radius:10px; padding:14px; display:flex; justify-content:space-between; align-items:center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl">Plaster Calculator</h1>
+        <p class="text-[var(--calidwell-general-text)] text-center mb-6">Estimate plasterboard counts and plaster bags by area. Add multiple walls/ceilings.</p>
+
+        <div class="section mb-6">
+            <h2 class="text-xl font-semibold text-[var(--calidwell-dark-text)] mb-3">1) Defaults</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm text-[var(--calidwell-general-text)] mb-1">Board Size</label>
+                    <select id="boardSize">
+                        <option value="1.2x2.4">1200 x 2400 mm</option>
+                        <option value="1.2x2.7">1200 x 2700 mm</option>
+                        <option value="1.2x3.0">1200 x 3000 mm</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm text-[var(--calidwell-general-text)] mb-1">Waste Factor (%)</label>
+                    <input type="number" id="wastePercent" value="10" step="1" min="0">
+                </div>
+                <div>
+                    <label class="block text-sm text-[var(--calidwell-general-text)] mb-1">Skim Thickness (mm)</label>
+                    <input type="number" id="skimThicknessMm" value="2" step="0.5" min="0">
+                    <p class="text-xs text-[var(--calidwell-general-text)] mt-1">Guide: ~10 m² per 25kg at 2 mm</p>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="text-xl font-semibold text-[var(--calidwell-dark-text)] mb-3">2) Areas</h2>
+        <div class="overflow-x-auto mb-4">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Type</th>
+                        <th>Length (m)</th>
+                        <th>Height/Width (m)</th>
+                        <th>Area (m²)</th>
+                        <th>Boards</th>
+                        <th>Skim (bags)</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="areasBody"></tbody>
+            </table>
+        </div>
+        <button id="addAreaBtn" class="btn mb-6">Add Area</button>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="summary-card"><span class="text-[var(--calidwell-general-text)]">Total Area</span><strong id="totalArea">0.00 m²</strong></div>
+            <div class="summary-card"><span class="text-[var(--calidwell-general-text)]">Total Boards</span><strong id="totalBoards">0</strong></div>
+            <div class="summary-card"><span class="text-[var(--calidwell-general-text)]">Skim Plaster (25kg bags)</span><strong id="totalSkimBags">0</strong></div>
+            <div class="summary-card"><span class="text-[var(--calidwell-general-text)]">Board Adhesive (bags)</span><strong id="totalAdhesiveBags">0</strong></div>
+        </div>
+
+        <div class="text-center mt-6">
+            <button id="recalculateBtn" class="btn">Recalculate</button>
+        </div>
+    </div>
+
+    <script>
+        // Simple assumptions
+        // Skim coverage: approx 10 m² per 25kg at 2 mm (linear with thickness)
+        // Adhesive coverage: approx 5 boards per 25kg bag (approximation)
+        const areasBody = document.getElementById('areasBody');
+        const addAreaBtn = document.getElementById('addAreaBtn');
+        const recalcBtn = document.getElementById('recalculateBtn');
+
+        function getBoardAreaM2() {
+            const value = document.getElementById('boardSize').value; // e.g., 1.2x2.4
+            const [w, h] = value.split('x').map(parseFloat);
+            return w * h; // m x m -> m²
+        }
+
+        function getWasteFactor() {
+            const p = parseFloat(document.getElementById('wastePercent').value) || 0;
+            return 1 + (p / 100);
+        }
+
+        function boardsFromArea(areaM2) {
+            const boardArea = getBoardAreaM2();
+            const withWaste = areaM2 * getWasteFactor();
+            if (boardArea <= 0) return 0;
+            return Math.ceil(withWaste / boardArea);
+        }
+
+        function skimBagsFromArea(areaM2) {
+            const thickness = parseFloat(document.getElementById('skimThicknessMm').value) || 2;
+            const bagsAt2mm = areaM2 / 10; // 10 m² per bag at 2mm
+            const bags = bagsAt2mm * (thickness / 2);
+            return Math.ceil(bags);
+        }
+
+        function adhesiveBagsFromBoards(boards) {
+            // Approx 5 boards per bag
+            if (boards <= 0) return 0;
+            return Math.ceil(boards / 5);
+        }
+
+        function createAreaRow(desc = 'Area', type = 'Wall', length = 3.0, height = 2.4) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" class="desc-input" value="${desc}" style="width:100%; border:1px solid var(--calidwell-border-grey); border-radius:8px; padding:8px 10px;"></td>
+                <td>
+                    <select class="type-input" style="width:100%; border:1px solid var(--calidwell-border-grey); border-radius:8px; padding:8px 10px;">
+                        <option ${type==='Wall'?'selected':''}>Wall</option>
+                        <option ${type==='Ceiling'?'selected':''}>Ceiling</option>
+                    </select>
+                </td>
+                <td><input type="number" step="0.1" class="length-input" value="${length}"></td>
+                <td><input type="number" step="0.1" class="height-input" value="${height}"></td>
+                <td class="area-cell">0.00</td>
+                <td class="boards-cell">0</td>
+                <td class="skim-cell">0</td>
+                <td><button class="btn remove-btn">Remove</button></td>
+            `;
+            areasBody.appendChild(tr);
+            tr.querySelectorAll('input,select').forEach(el => el.addEventListener('input', calculateAll));
+            tr.querySelector('.remove-btn').addEventListener('click', () => { tr.remove(); calculateAll(); });
+            return tr;
+        }
+
+        function calculateRow(tr) {
+            const length = parseFloat(tr.querySelector('.length-input').value) || 0;
+            const height = parseFloat(tr.querySelector('.height-input').value) || 0;
+            const area = Math.max(0, length * height);
+            const boards = boardsFromArea(area);
+            const skimBags = skimBagsFromArea(area);
+            tr.querySelector('.area-cell').textContent = area.toFixed(2);
+            tr.querySelector('.boards-cell').textContent = boards.toString();
+            tr.querySelector('.skim-cell').textContent = skimBags.toString();
+            return { area, boards, skimBags };
+        }
+
+        function calculateAll() {
+            let totalArea = 0;
+            let totalBoards = 0;
+            let totalSkimBags = 0;
+            const rows = areasBody.querySelectorAll('tr');
+            rows.forEach(tr => {
+                const { area, boards, skimBags } = calculateRow(tr);
+                totalArea += area;
+                totalBoards += boards;
+                totalSkimBags += skimBags;
+            });
+            document.getElementById('totalArea').textContent = totalArea.toFixed(2) + ' m²';
+            document.getElementById('totalBoards').textContent = totalBoards.toString();
+            document.getElementById('totalSkimBags').textContent = totalSkimBags.toString();
+            document.getElementById('totalAdhesiveBags').textContent = adhesiveBagsFromBoards(totalBoards).toString();
+        }
+
+        addAreaBtn.addEventListener('click', () => { createAreaRow(); calculateAll(); });
+        recalcBtn.addEventListener('click', calculateAll);
+        document.getElementById('boardSize').addEventListener('change', calculateAll);
+        document.getElementById('wastePercent').addEventListener('input', calculateAll);
+        document.getElementById('skimThicknessMm').addEventListener('input', calculateAll);
+
+        // Initial rows
+        createAreaRow('Wall 1', 'Wall', 4.0, 2.4);
+        createAreaRow('Ceiling 1', 'Ceiling', 4.0, 3.0);
+        calculateAll();
+    </script>
+</body>
+</html>
