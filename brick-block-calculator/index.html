@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wall Material Estimator</title>
+    <title>Brick & Block Calculator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -217,7 +217,7 @@
 </head>
 <body>
     <div class="container">
-        <h1 class="text-3xl font-bold">Wall Material Estimator</h1>
+        <h1 class="text-3xl font-bold">Brick & Block Calculator</h1>
 
         <!-- Calculation Type and Wall Thickness Selection -->
         <div class="mb-8 p-6 bg-[var(--calidwell-light-bg-2)] rounded-lg shadow-inner flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-8">
@@ -410,11 +410,13 @@
                 cementRatioInput.value = wallThickness === 'single' ? '7.5' : '15';
                 bricksRatioInput.value = wallThickness === 'single' ? '60' : '120';
                 bricksRatioInput.classList.add('highlight-input');
+                document.getElementById('unitsLabel').textContent = 'Bricks Needed';
             } else {
                 sandRatioInput.value = wallThickness === 'single' ? '18' : '36';
                 cementRatioInput.value = wallThickness === 'single' ? '4.5' : '9';
                 blocksRatioInput.value = wallThickness === 'single' ? '10' : '20';
                 blocksRatioInput.classList.add('highlight-input');
+                document.getElementById('unitsLabel').textContent = 'Blocks Needed';
             }
         }
 
