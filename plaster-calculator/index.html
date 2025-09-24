@@ -30,10 +30,6 @@
         .btn:hover { background: var(--calidwell-secondary-accent); transform: scale(1.03); }
         .btn-sm { padding: 6px 10px; font-weight: 600; border-radius: 6px; }
         .summary-card { background:#fff; border:1px solid var(--calidwell-border-grey); border-radius:10px; padding:14px; display:flex; justify-content:space-between; align-items:center; }
-        .openings-editor { background: #fff; border: 1px dashed var(--calidwell-border-grey); border-radius: 8px; padding: 10px; margin-top: 8px; }
-        .hidden { display: none; }
-        .row-flex { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
-        .row-flex input { flex: 1; }
     </style>
 </head>
 <body>
@@ -136,90 +132,35 @@
             return Math.ceil(boards / 3);
         }
 
-        function computeOpeningsSum(tr) {
-            let sum = 0;
-            tr.querySelectorAll('.openings-rows .opening-row').forEach(row => {
-                const l = parseFloat(row.querySelector('.opening-length').value) || 0;
-                const h = parseFloat(row.querySelector('.opening-height').value) || 0;
-                const a = Math.max(0, l * h);
-                row.querySelector('.opening-area').textContent = a.toFixed(2);
-                sum += a;
-            });
-            tr.querySelector('.openings-sum').textContent = sum.toFixed(2);
-            return sum;
-        }
-
-        function attachOpeningsHandlers(tr) {
-            const toggleBtn = tr.querySelector('.openings-toggle');
-            const editor = tr.querySelector('.openings-editor');
-            const addBtn = tr.querySelector('.add-opening');
-
-            toggleBtn.addEventListener('click', () => {
-                editor.classList.toggle('hidden');
-            });
-            addBtn.addEventListener('click', () => {
-                const container = tr.querySelector('.openings-rows');
-                const entry = document.createElement('div');
-                entry.className = 'opening-row row-flex';
-                entry.innerHTML = `
-                    <input type="number" step="0.01" min="0" placeholder="Length (m)" class="opening-length">
-                    <input type="number" step="0.01" min="0" placeholder="Height (m)" class="opening-height">
-                    <div class="opening-area" style="min-width:70px; text-align:right;">0.00</div>
-                    <button type="button" class="btn-sm btn remove-opening">Remove</button>
-                `;
-                container.appendChild(entry);
-                entry.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => { computeOpeningsSum(tr); calculateAll(); }));
-                entry.querySelector('.remove-opening').addEventListener('click', () => { entry.remove(); computeOpeningsSum(tr); calculateAll(); });
-                computeOpeningsSum(tr);
-                calculateAll();
-            });
-        }
-
-        function createAreaRow(desc = 'Area', type = 'Wall', length = 3.0, height = 2.4) {
+        function createAreaRow(desc = 'Area', type = 'Wall', length = 3.0, height = 2.4, openings = 0) {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><input type="text" class="desc-input" value="${desc}" style="width:100%; border:1px solid var(--calidwell-border-grey); border-radius:8px; padding:8px 10px;"></td>
+                <td><input type=\"text\" class=\"desc-input\" value=\"${desc}\" style=\"width:100%; border:1px solid var(--calidwell-border-grey); border-radius:8px; padding:8px 10px;\"></td>
                 <td>
-                    <select class="type-input" style="width:100%; border:1px solid var(--calidwell-border-grey); border-radius:8px; padding:8px 10px;">
+                    <select class=\"type-input\" style=\"width:100%; border:1px solid var(--calidwell-border-grey); border-radius:8px; padding:8px 10px;\">
                         <option ${type==='Wall'?'selected':''}>Wall</option>
                         <option ${type==='Ceiling'?'selected':''}>Ceiling</option>
                     </select>
                 </td>
-                <td><input type="number" step="0.1" class="length-input" value="${length}"></td>
-                <td><input type="number" step="0.1" class="height-input" value="${height}"></td>
-                <td>
-                    <div class="openings-controls" style="display:flex; gap:8px; align-items:center;">
-                        <div class="openings-sum" style="min-width:60px; text-align:right;">0.00</div>
-                        <button type="button" class="btn-sm btn openings-toggle">Openings</button>
-                    </div>
-                    <div class="openings-editor hidden">
-                        <div class="row-flex" style="font-size:12px; color:var(--calidwell-general-text);">
-                            <div style="flex:1;">Length (m)</div>
-                            <div style="flex:1;">Height (m)</div>
-                            <div style="min-width:70px; text-align:right;">Area</div>
-                            <div style="min-width:80px;"></div>
-                        </div>
-                        <div class="openings-rows"></div>
-                        <button type="button" class="btn-sm btn add-opening" style="margin-top:6px;">Add opening</button>
-                    </div>
-                </td>
-                <td class="area-cell">0.00</td>
-                <td class="boards-cell">0</td>
-                <td class="skim-cell">0</td>
-                <td><button class="btn remove-btn">Remove</button></td>
+                <td><input type=\"number\" step=\"0.1\" class=\"length-input\" value=\"${length}\"></td>
+                <td><input type=\"number\" step=\"0.1\" class=\"height-input\" value=\"${height}\"></td>
+                <td><input type=\"number\" step=\"0.01\" min=\"0\" class=\"openings-input\" value=\"${openings}\" placeholder=\"e.g. 2.4\"></td>
+                <td class=\"area-cell\">0.00</td>
+                <td class=\"boards-cell\">0</td>
+                <td class=\"skim-cell\">0</td>
+                <td><button class=\"btn remove-btn\">Remove</button></td>
             `;
             areasBody.appendChild(tr);
             tr.querySelectorAll('input,select').forEach(el => el.addEventListener('input', calculateAll));
             tr.querySelector('.remove-btn').addEventListener('click', () => { tr.remove(); calculateAll(); });
-            attachOpeningsHandlers(tr);
             return tr;
         }
 
         function calculateRow(tr) {
             const length = parseFloat(tr.querySelector('.length-input').value) || 0;
             const height = parseFloat(tr.querySelector('.height-input').value) || 0;
+            const openings = Math.max(0, parseFloat(tr.querySelector('.openings-input').value) || 0);
             const gross = Math.max(0, length * height);
-            const openings = computeOpeningsSum(tr);
             const area = Math.max(0, gross - openings);
             const boards = boardsFromArea(area);
             const skimBags = skimBagsFromArea(area);
@@ -256,8 +197,8 @@
         document.getElementById('skimThicknessMm').addEventListener('input', calculateAll);
 
         // Initial rows
-        createAreaRow('Wall 1', 'Wall', 4.0, 2.4);
-        createAreaRow('Ceiling 1', 'Ceiling', 4.0, 3.0);
+        createAreaRow('Wall 1', 'Wall', 4.0, 2.4, 0);
+        createAreaRow('Ceiling 1', 'Ceiling', 4.0, 3.0, 0);
         calculateAll();
     </script>
 </body>
