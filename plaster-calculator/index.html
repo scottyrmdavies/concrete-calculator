@@ -89,7 +89,7 @@
             <div class="summary-card"><span class="text-[var(--calidwell-general-text)]">Total Area</span><strong id="totalArea">0.00 m²</strong></div>
             <div class="summary-card"><span class="text-[var(--calidwell-general-text)]">Total Boards</span><strong id="totalBoards">0</strong></div>
             <div class="summary-card"><span class="text-[var(--calidwell-general-text)]">Skim Plaster (25kg bags)</span><strong id="totalSkimBags">0</strong></div>
-            <div class="summary-card"><span class="text-[var(--calidwell-general-text)]">Board Adhesive (bags)</span><strong id="totalAdhesiveBags">0</strong></div>
+            <div class="summary-card"><span class="text-[var(--calidwell-general-text)]">Board Adhesive (bags, walls only)</span><strong id="totalAdhesiveBags">0</strong></div>
         </div>
 
         <div class="text-center mt-6">
@@ -100,7 +100,7 @@
     <script>
         // Simple assumptions
         // Skim coverage: approx 10 m² per 25kg at 2 mm (linear with thickness)
-        // Adhesive coverage: approx 5 boards per 25kg bag (approximation)
+        // Adhesive coverage: approx 3 boards per 25kg bag (more conservative)
         const areasBody = document.getElementById('areasBody');
         const addAreaBtn = document.getElementById('addAreaBtn');
         const recalcBtn = document.getElementById('recalculateBtn');
@@ -131,9 +131,9 @@
         }
 
         function adhesiveBagsFromBoards(boards) {
-            // Approx 5 boards per bag
+            // Approx 3 boards per bag (conservative)
             if (boards <= 0) return 0;
-            return Math.ceil(boards / 5);
+            return Math.ceil(boards / 3);
         }
 
         function computeOpeningsSum(tr) {
@@ -233,17 +233,20 @@
             let totalArea = 0;
             let totalBoards = 0;
             let totalSkimBags = 0;
+            let totalWallBoards = 0; // for adhesive only
             const rows = areasBody.querySelectorAll('tr');
             rows.forEach(tr => {
                 const { area, boards, skimBags } = calculateRow(tr);
                 totalArea += area;
                 totalBoards += boards;
                 totalSkimBags += skimBags;
+                const type = (tr.querySelector('.type-input')?.value || 'Wall');
+                if (type === 'Wall') totalWallBoards += boards;
             });
             document.getElementById('totalArea').textContent = totalArea.toFixed(2) + ' m²';
             document.getElementById('totalBoards').textContent = totalBoards.toString();
             document.getElementById('totalSkimBags').textContent = totalSkimBags.toString();
-            document.getElementById('totalAdhesiveBags').textContent = adhesiveBagsFromBoards(totalBoards).toString();
+            document.getElementById('totalAdhesiveBags').textContent = adhesiveBagsFromBoards(totalWallBoards).toString();
         }
 
         addAreaBtn.addEventListener('click', () => { createAreaRow(); calculateAll(); });
