@@ -74,8 +74,15 @@
             </div>
         </div>
 
-        <!-- Parameters -->
+        <!-- Units + Parameters -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="md:col-span-3">
+                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Units</label>
+                <select id="unitSystem" class="quantity-input text-[var(--calidwell-dark-text)] max-w-xs">
+                    <option value="metric" selected>Metric (m, mm, m²)</option>
+                    <option value="imperial">Imperial (ft, in, ft²)</option>
+                </select>
+            </div>
             <div>
                 <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Corner Allowance (m per internal corner)</label>
                 <input id="cornerAllowanceM" type="number" step="0.1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 0.6">
@@ -131,6 +138,7 @@
         document.getElementById('resetBtn').addEventListener('click', resetForm);
         document.getElementById('addWallBtn').addEventListener('click', () => addWallRow());
         document.getElementById('addOpeningBtn').addEventListener('click', () => addOpeningRow());
+        document.getElementById('unitSystem').addEventListener('change', onUnitsChange);
 
         function addWallRow(initial = {}) {
             const tbody = document.getElementById('wallsBody');
@@ -173,9 +181,11 @@
             let platesLm = 0;
             let totalWallLength = 0;
 
+            const isImperial = document.getElementById('unitSystem').value === 'imperial';
             rows.forEach(tr => {
-                const length = toNumber(tr.querySelectorAll('input')[1].value);
-                const height = toNumber(tr.querySelectorAll('input')[2].value);
+                let length = toNumber(tr.querySelectorAll('input')[1].value);
+                let height = toNumber(tr.querySelectorAll('input')[2].value);
+                if (isImperial) { length = length * 0.3048; height = height * 0.3048; }
                 const centersMm = parseInt(tr.querySelector('select').value, 10);
                 const nogginsRows = Math.max(0, Math.floor(toNumber(tr.querySelectorAll('input')[3].value)));
                 const qty = Math.max(1, Math.floor(toNumber(tr.querySelectorAll('input')[4].value)) || 1);
@@ -205,8 +215,9 @@
             let openingsWidthTotal = 0;
             let openingCount = 0;
             openings.forEach(tr => {
-                const width = toNumber(tr.querySelectorAll('input')[0].value);
-                const height = toNumber(tr.querySelectorAll('input')[1].value);
+                let width = toNumber(tr.querySelectorAll('input')[0].value);
+                let height = toNumber(tr.querySelectorAll('input')[1].value);
+                if (isImperial) { width = width * 0.3048; height = height * 0.3048; }
                 const qty = Math.max(0, Math.floor(toNumber(tr.querySelectorAll('input')[2].value)) || 0);
                 if (width > 0 && height > 0 && qty > 0) {
                     openingsArea += width * height * qty;
@@ -227,8 +238,9 @@
             nogginLm = Math.max(0, nogginLm - openingsWidthTotal * rowsPerMeter);
 
             // Corner allowance
-            const cornerAllowanceM = toNumber(document.getElementById('cornerAllowanceM').value);
+            let cornerAllowanceM = toNumber(document.getElementById('cornerAllowanceM').value);
             const numCorners = Math.max(0, Math.floor(toNumber(document.getElementById('numCorners').value)) || 0);
+            if (isImperial) { cornerAllowanceM = cornerAllowanceM * 0.3048; }
             const cornerLm = cornerAllowanceM * numCorners;
 
             let totalLm = 0;
@@ -287,6 +299,42 @@
         document.getElementById('numCorners').value = 2;
         document.getElementById('estimateMode').value = 'calc';
         calculate();
+
+        function onUnitsChange() {
+            const isImperial = document.getElementById('unitSystem').value === 'imperial';
+            // Convert walls table
+            document.querySelectorAll('#wallsBody tr').forEach(tr => {
+                const inputs = tr.querySelectorAll('input');
+                let length = toNumber(inputs[1].value);
+                let height = toNumber(inputs[2].value);
+                if (length || height) {
+                    if (isImperial) {
+                        if (length) inputs[1].value = (length / 0.3048).toFixed(2);
+                        if (height) inputs[2].value = (height / 0.3048).toFixed(2);
+                    } else {
+                        if (length) inputs[1].value = (length * 0.3048).toFixed(2);
+                        if (height) inputs[2].value = (height * 0.3048).toFixed(2);
+                    }
+                }
+            });
+            // Convert openings table
+            document.querySelectorAll('#openingsBody tr').forEach(tr => {
+                const inputs = tr.querySelectorAll('input');
+                let width = toNumber(inputs[1].value);
+                let height = toNumber(inputs[2].value);
+                if (width || height) {
+                    if (isImperial) {
+                        if (width) inputs[1].value = (width / 0.3048).toFixed(2);
+                        if (height) inputs[2].value = (height / 0.3048).toFixed(2);
+                    } else {
+                        if (width) inputs[1].value = (width * 0.3048).toFixed(2);
+                        if (height) inputs[2].value = (height * 0.3048).toFixed(2);
+                    }
+                }
+            });
+            // Corner allowance label left as meters but value converted when calculating
+            calculate();
+        }
     </script>
 </body>
 </html>

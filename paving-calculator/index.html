@@ -59,8 +59,15 @@
             </div>
         </div>
 
-        <!-- Slab Parameters -->
+        <!-- Units + Slab Parameters -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Units</label>
+                <select id="unitSystem" class="quantity-input text-[var(--calidwell-dark-text)] max-w-xs">
+                    <option value="metric" selected>Metric (m, mm, m²)</option>
+                    <option value="imperial">Imperial (ft, in, ft²)</option>
+                </select>
+            </div>
             <div class="md:col-span-2">
                 <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Preset (optional)</label>
                 <select id="preset" class="quantity-input text-[var(--calidwell-dark-text)]">
@@ -71,15 +78,15 @@
                 </select>
             </div>
             <div>
-                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Slab Width (mm)</label>
+                <label id="labelSlabWidth" class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Slab Width (mm)</label>
                 <input id="slabWidth" type="number" step="1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 600">
             </div>
             <div>
-                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Slab Length (mm)</label>
+                <label id="labelSlabLength" class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Slab Length (mm)</label>
                 <input id="slabLength" type="number" step="1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 600">
             </div>
             <div>
-                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Joint (mm)</label>
+                <label id="labelJoint" class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Joint (mm)</label>
                 <input id="joint" type="number" step="0.5" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 5">
             </div>
             <div>
@@ -91,7 +98,7 @@
                 <input id="slabsPerPack" type="number" step="1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 20">
             </div>
             <div>
-                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Bedding Coverage (m² per bag)</label>
+                <label id="labelBeddingCoverage" class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Bedding Coverage (m² per bag)</label>
                 <input id="beddingCoverage" type="number" step="0.1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 4">
             </div>
         </div>
@@ -210,6 +217,7 @@
         document.getElementById('calculateBtn').addEventListener('click', calculate);
         document.getElementById('resetBtn').addEventListener('click', resetForm);
         document.getElementById('addAreaBtn').addEventListener('click', () => addAreaRow());
+        document.getElementById('unitSystem').addEventListener('change', onUnitsChange);
         document.getElementById('preset').addEventListener('change', onPresetChange);
         document.getElementById('calcVolumesBtn').addEventListener('click', updateVolumes);
 
@@ -241,8 +249,10 @@
         }
 
         function recalcRow(tr) {
-            const width = toNumber(tr.querySelectorAll('input')[1].value);
-            const length = toNumber(tr.querySelectorAll('input')[2].value);
+            const isImperial = document.getElementById('unitSystem').value === 'imperial';
+            let width = toNumber(tr.querySelectorAll('input')[1].value);
+            let length = toNumber(tr.querySelectorAll('input')[2].value);
+            if (isImperial) { width = width * 0.3048; length = length * 0.3048; }
             const qty = Math.max(1, Math.floor(toNumber(tr.querySelectorAll('input')[3].value)) || 1);
             const area = width * length * qty;
             tr.querySelector('.row-area').textContent = (isFinite(area) ? area : 0).toFixed(2);
@@ -252,15 +262,62 @@
         function computeTotalAreaFromRows() {
             const rows = document.querySelectorAll('#areasBody tr');
             let total = 0;
+            const isImperial = document.getElementById('unitSystem').value === 'imperial';
             rows.forEach(tr => {
-                const width = toNumber(tr.querySelectorAll('input')[1].value);
-                const length = toNumber(tr.querySelectorAll('input')[2].value);
+                let width = toNumber(tr.querySelectorAll('input')[1].value);
+                let length = toNumber(tr.querySelectorAll('input')[2].value);
+                if (isImperial) { width = width * 0.3048; length = length * 0.3048; }
                 const qty = Math.max(1, Math.floor(toNumber(tr.querySelectorAll('input')[3].value)) || 1);
                 if (width > 0 && length > 0 && qty > 0) {
                     total += width * length * qty;
                 }
             });
             return total;
+        }
+
+        function onUnitsChange() {
+            const isImperial = document.getElementById('unitSystem').value === 'imperial';
+            document.getElementById('labelSlabWidth').textContent = `Slab Width (${isImperial ? 'in' : 'mm'})`;
+            document.getElementById('labelSlabLength').textContent = `Slab Length (${isImperial ? 'in' : 'mm'})`;
+            document.getElementById('labelJoint').textContent = `Joint (${isImperial ? 'in' : 'mm'})`;
+            document.getElementById('labelBeddingCoverage').textContent = `Bedding Coverage (${isImperial ? 'ft²' : 'm²'} per bag)`;
+
+            // Convert slab inputs
+            const w = toNumber(document.getElementById('slabWidth').value);
+            const l = toNumber(document.getElementById('slabLength').value);
+            const j = toNumber(document.getElementById('joint').value);
+            if (isImperial) {
+                if (w) document.getElementById('slabWidth').value = (w / 25.4).toFixed(2);
+                if (l) document.getElementById('slabLength').value = (l / 25.4).toFixed(2);
+                if (j) document.getElementById('joint').value = (j / 25.4).toFixed(2);
+                const cov = toNumber(document.getElementById('beddingCoverage').value);
+                if (cov) document.getElementById('beddingCoverage').value = (cov / 0.092903).toFixed(2);
+            } else {
+                if (w) document.getElementById('slabWidth').value = (w * 25.4).toFixed(0);
+                if (l) document.getElementById('slabLength').value = (l * 25.4).toFixed(0);
+                if (j) document.getElementById('joint').value = (j * 25.4).toFixed(1);
+                const cov = toNumber(document.getElementById('beddingCoverage').value);
+                if (cov) document.getElementById('beddingCoverage').value = (cov * 0.092903).toFixed(2);
+            }
+
+            // Convert areas table values
+            document.querySelectorAll('#areasBody tr').forEach(tr => {
+                const inputs = tr.querySelectorAll('input');
+                let width = toNumber(inputs[1].value);
+                let length = toNumber(inputs[2].value);
+                if (width || length) {
+                    if (isImperial) {
+                        if (width) inputs[1].value = (width / 0.3048).toFixed(2);
+                        if (length) inputs[2].value = (length / 0.3048).toFixed(2);
+                    } else {
+                        if (width) inputs[1].value = (width * 0.3048).toFixed(2);
+                        if (length) inputs[2].value = (length * 0.3048).toFixed(2);
+                    }
+                }
+            });
+            updateTotalAreaDisplay(computeTotalAreaFromRows());
+            calculate();
+            updateVolumes();
         }
 
         function updateTotalAreaDisplay(value) {

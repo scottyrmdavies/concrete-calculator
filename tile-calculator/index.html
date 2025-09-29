@@ -60,18 +60,25 @@
             </div>
         </div>
 
-        <!-- Tile Parameters -->
+        <!-- Units + Tile Parameters -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Units</label>
+                <select id="unitSystem" class="quantity-input text-[var(--calidwell-dark-text)] max-w-xs">
+                    <option value="metric" selected>Metric (m, mm, m²)</option>
+                    <option value="imperial">Imperial (ft, in, ft²)</option>
+                </select>
+            </div>
             <div>
-                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Tile Width (mm)</label>
+                <label id="labelTileWidth" class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Tile Width (mm)</label>
                 <input id="tileWidth" type="number" step="1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 300">
             </div>
             <div>
-                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Tile Height (mm)</label>
+                <label id="labelTileHeight" class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Tile Height (mm)</label>
                 <input id="tileHeight" type="number" step="1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 300">
             </div>
             <div>
-                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Grout Joint (mm)</label>
+                <label id="labelGrout" class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Grout Joint (mm)</label>
                 <input id="grout" type="number" step="0.5" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 3">
             </div>
             <div>
@@ -83,7 +90,7 @@
                 <input id="tilesPerBox" type="number" step="1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 9">
             </div>
             <div>
-                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Adhesive Coverage (m² per bag)</label>
+                <label id="labelCoverage" class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Adhesive Coverage (m² per bag)</label>
                 <input id="adhesiveCoverage" type="number" step="0.1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 5">
             </div>
         </div>
@@ -123,13 +130,22 @@
 
         function calculate() {
             // Sum areas from the Areas table
+            const isImperial = document.getElementById('unitSystem').value === 'imperial';
             const totalAreaM2 = computeTotalAreaFromRows();
-            const tileWidthMm = toNumber(document.getElementById('tileWidth').value);
-            const tileHeightMm = toNumber(document.getElementById('tileHeight').value);
-            const groutMm = toNumber(document.getElementById('grout').value);
+            let tileWidthMm = toNumber(document.getElementById('tileWidth').value);
+            let tileHeightMm = toNumber(document.getElementById('tileHeight').value);
+            let groutMm = toNumber(document.getElementById('grout').value);
             const wastagePct = toNumber(document.getElementById('wastage').value);
             const tilesPerBox = Math.max(1, Math.floor(toNumber(document.getElementById('tilesPerBox').value)));
-            const adhesiveCoverage = toNumber(document.getElementById('adhesiveCoverage').value);
+            let adhesiveCoverage = toNumber(document.getElementById('adhesiveCoverage').value);
+
+            // Convert imperial inputs to metric for computation
+            if (isImperial) {
+                tileWidthMm = tileWidthMm * 25.4; // in -> mm
+                tileHeightMm = tileHeightMm * 25.4;
+                groutMm = groutMm * 25.4;
+                adhesiveCoverage = adhesiveCoverage * 0.092903; // ft² -> m²
+            }
 
             if (!totalAreaM2 || !tileWidthMm || !tileHeightMm) {
                 updateResults(0, 0, 0, 0);
@@ -175,6 +191,7 @@
         document.getElementById('calculateBtn').addEventListener('click', calculate);
         document.getElementById('resetBtn').addEventListener('click', resetForm);
         document.getElementById('addAreaBtn').addEventListener('click', () => addAreaRow());
+        document.getElementById('unitSystem').addEventListener('change', onUnitsChange);
 
         function addAreaRow(initial = {}) {
             const tbody = document.getElementById('areasBody');
@@ -204,8 +221,13 @@
         }
 
         function recalcRow(tr) {
-            const width = toNumber(tr.querySelectorAll('input')[1].value);
-            const height = toNumber(tr.querySelectorAll('input')[2].value);
+            const isImperial = document.getElementById('unitSystem').value === 'imperial';
+            let width = toNumber(tr.querySelectorAll('input')[1].value);
+            let height = toNumber(tr.querySelectorAll('input')[2].value);
+            if (isImperial) {
+                width = width * 0.3048; // ft -> m
+                height = height * 0.3048;
+            }
             const qty = Math.max(1, Math.floor(toNumber(tr.querySelectorAll('input')[3].value)) || 1);
             const area = width * height * qty;
             tr.querySelector('.row-area').textContent = (isFinite(area) ? area : 0).toFixed(2);
@@ -215,9 +237,11 @@
         function computeTotalAreaFromRows() {
             const rows = document.querySelectorAll('#areasBody tr');
             let total = 0;
+            const isImperial = document.getElementById('unitSystem').value === 'imperial';
             rows.forEach(tr => {
-                const width = toNumber(tr.querySelectorAll('input')[1].value);
-                const height = toNumber(tr.querySelectorAll('input')[2].value);
+                let width = toNumber(tr.querySelectorAll('input')[1].value);
+                let height = toNumber(tr.querySelectorAll('input')[2].value);
+                if (isImperial) { width = width * 0.3048; height = height * 0.3048; }
                 const qty = Math.max(1, Math.floor(toNumber(tr.querySelectorAll('input')[3].value)) || 1);
                 if (width > 0 && height > 0 && qty > 0) {
                     total += width * height * qty;
@@ -246,6 +270,55 @@
         document.getElementById('adhesiveCoverage').value = 5;
         updateTotalAreaDisplay(computeTotalAreaFromRows());
         calculate();
+
+        function onUnitsChange() {
+            const isImperial = document.getElementById('unitSystem').value === 'imperial';
+            // Update labels
+            document.getElementById('labelTileWidth').textContent = `Tile Width (${isImperial ? 'in' : 'mm'})`;
+            document.getElementById('labelTileHeight').textContent = `Tile Height (${isImperial ? 'in' : 'mm'})`;
+            document.getElementById('labelGrout').textContent = `Grout Joint (${isImperial ? 'in' : 'mm'})`;
+            document.getElementById('labelCoverage').textContent = `Adhesive Coverage (${isImperial ? 'ft²' : 'm²'} per bag)`;
+
+            // Convert tile inputs
+            const w = toNumber(document.getElementById('tileWidth').value);
+            const h = toNumber(document.getElementById('tileHeight').value);
+            const g = toNumber(document.getElementById('grout').value);
+            if (isImperial) {
+                // mm -> in
+                if (w) document.getElementById('tileWidth').value = (w / 25.4).toFixed(2);
+                if (h) document.getElementById('tileHeight').value = (h / 25.4).toFixed(2);
+                if (g) document.getElementById('grout').value = (g / 25.4).toFixed(2);
+                // m² per bag -> ft² per bag
+                const cov = toNumber(document.getElementById('adhesiveCoverage').value);
+                if (cov) document.getElementById('adhesiveCoverage').value = (cov / 0.092903).toFixed(2);
+            } else {
+                // in -> mm
+                if (w) document.getElementById('tileWidth').value = (w * 25.4).toFixed(0);
+                if (h) document.getElementById('tileHeight').value = (h * 25.4).toFixed(0);
+                if (g) document.getElementById('grout').value = (g * 25.4).toFixed(1);
+                // ft² per bag -> m² per bag
+                const cov = toNumber(document.getElementById('adhesiveCoverage').value);
+                if (cov) document.getElementById('adhesiveCoverage').value = (cov * 0.092903).toFixed(2);
+            }
+
+            // Convert area rows values (width/height)
+            document.querySelectorAll('#areasBody tr').forEach(tr => {
+                const inputs = tr.querySelectorAll('input');
+                let width = toNumber(inputs[1].value);
+                let height = toNumber(inputs[2].value);
+                if (width || height) {
+                    if (isImperial) {
+                        if (width) inputs[1].value = (width / 0.3048).toFixed(2); // m -> ft
+                        if (height) inputs[2].value = (height / 0.3048).toFixed(2);
+                    } else {
+                        if (width) inputs[1].value = (width * 0.3048).toFixed(2); // ft -> m
+                        if (height) inputs[2].value = (height * 0.3048).toFixed(2);
+                    }
+                }
+            });
+            updateTotalAreaDisplay(computeTotalAreaFromRows());
+            calculate();
+        }
     </script>
 </body>
 </html>
