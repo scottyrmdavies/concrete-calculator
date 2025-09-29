@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tile Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --calidwell-primary-accent: #30C7B5;
+            --calidwell-secondary-accent: #00AC97;
+            --calidwell-dark-text: #14261C;
+            --calidwell-general-text: #4F5655;
+            --calidwell-light-bg-1: #F3F6F3;
+            --calidwell-light-bg-2: #F6F7F8;
+            --calidwell-white: #FFFFFF;
+            --calidwell-border-grey: #dddddd;
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--calidwell-light-bg-1); }
+        .quantity-input { padding: 0.75rem; border-width: 2px; border-color: var(--calidwell-border-grey); border-radius: 0.375rem; width: 100%; box-sizing: border-box; }
+        .quantity-input:focus { border-color: var(--calidwell-primary-accent); box-shadow: 0 0 0 3px rgba(48,199,181,0.5); outline: none; }
+        input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
+    </style>
+    <meta name="description" content="Calculate tiles, boxes, and adhesive required based on area and tile size.">
+</head>
+<body class="p-4 sm:p-6 md:p-8">
+    <div class="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-lg shadow-xl">
+        <h1 class="text-3xl font-bold text-[var(--calidwell-dark-text)] mb-6 text-center">Tile Calculator</h1>
+
+        <!-- Areas (Walls/Floors) -->
+        <div class="mb-6 p-4 bg-[var(--calidwell-light-bg-2)] rounded-lg border border-[var(--calidwell-border-grey)]">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-xl font-semibold text-[var(--calidwell-dark-text)]">Areas</h2>
+                <button id="addAreaBtn" class="bg-[var(--calidwell-primary-accent)] hover:bg-[var(--calidwell-secondary-accent)] text-white font-semibold py-2 px-4 rounded-md shadow transition">Add Area</button>
+            </div>
+            <div class="overflow-x-auto rounded-md border border-[var(--calidwell-border-grey)] bg-white">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-[var(--calidwell-light-bg-1)] text-[var(--calidwell-general-text)]">
+                        <tr>
+                            <th class="text-left px-3 py-2">Name</th>
+                            <th class="text-left px-3 py-2">Type</th>
+                            <th class="text-left px-3 py-2">Width (m)</th>
+                            <th class="text-left px-3 py-2">Height/Depth (m)</th>
+                            <th class="text-left px-3 py-2">Qty</th>
+                            <th class="text-left px-3 py-2">Area (m²)</th>
+                            <th class="text-left px-3 py-2">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="areasBody" class="divide-y divide-[var(--calidwell-border-grey)] text-[var(--calidwell-dark-text)]">
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-3 flex justify-end text-sm text-[var(--calidwell-dark-text)]">
+                <div class="bg-white border border-[var(--calidwell-border-grey)] rounded-md px-3 py-2">
+                    <span class="text-[var(--calidwell-general-text)]">Total Area:</span>
+                    <span id="totalArea" class="font-semibold">0.00 m²</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tile Parameters -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Tile Width (mm)</label>
+                <input id="tileWidth" type="number" step="1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 300">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Tile Height (mm)</label>
+                <input id="tileHeight" type="number" step="1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 300">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Grout Joint (mm)</label>
+                <input id="grout" type="number" step="0.5" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 3">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Wastage Allowance (%)</label>
+                <input id="wastage" type="number" step="1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 10">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Tiles per Box</label>
+                <input id="tilesPerBox" type="number" step="1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 9">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Adhesive Coverage (m² per bag)</label>
+                <input id="adhesiveCoverage" type="number" step="0.1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 5">
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4 mb-6">
+            <button id="calculateBtn" class="w-full sm:w-auto bg-[var(--calidwell-primary-accent)] hover:bg-[var(--calidwell-secondary-accent)] text-white font-bold py-3 px-6 rounded-md shadow-lg transition duration-200 ease-in-out transform hover:scale-105">Calculate</button>
+            <button id="resetBtn" class="w-full sm:w-auto bg-white text-[var(--calidwell-dark-text)] border border-[var(--calidwell-border-grey)] font-bold py-3 px-6 rounded-md shadow-sm">Reset</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-[var(--calidwell-light-bg-2)] p-4 rounded-md border border-[var(--calidwell-border-grey)]">
+                <h2 class="text-lg font-semibold text-[var(--calidwell-dark-text)] mb-2">Results</h2>
+                <ul class="text-sm text-[var(--calidwell-dark-text)] space-y-1">
+                    <li><span class="text-[var(--calidwell-general-text)]">Net Area:</span> <span id="netArea" class="font-semibold">0.00 m²</span></li>
+                    <li><span class="text-[var(--calidwell-general-text)]">Tiles Needed (incl. waste):</span> <span id="tilesNeeded" class="font-semibold">0</span></li>
+                    <li><span class="text-[var(--calidwell-general-text)]">Boxes to Order:</span> <span id="boxes" class="font-semibold">0</span></li>
+                    <li><span class="text-[var(--calidwell-general-text)]">Adhesive Bags:</span> <span id="adhesiveBags" class="font-semibold">0</span></li>
+                </ul>
+            </div>
+
+            <div class="bg-[var(--calidwell-light-bg-2)] p-4 rounded-md border border-[var(--calidwell-border-grey)]">
+                <h2 class="text-lg font-semibold text-[var(--calidwell-dark-text)] mb-2">Notes</h2>
+                <ul class="list-disc pl-5 text-sm text-[var(--calidwell-general-text)] space-y-1">
+                    <li>Tile area includes grout joint as effective size.</li>
+                    <li>Wastage applied to tile count, not adhesive.</li>
+                    <li>Round up boxes and bags to whole numbers.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toNumber(value) {
+            const n = parseFloat(value);
+            return isNaN(n) ? 0 : n;
+        }
+
+        function calculate() {
+            // Sum areas from the Areas table
+            const totalAreaM2 = computeTotalAreaFromRows();
+            const tileWidthMm = toNumber(document.getElementById('tileWidth').value);
+            const tileHeightMm = toNumber(document.getElementById('tileHeight').value);
+            const groutMm = toNumber(document.getElementById('grout').value);
+            const wastagePct = toNumber(document.getElementById('wastage').value);
+            const tilesPerBox = Math.max(1, Math.floor(toNumber(document.getElementById('tilesPerBox').value)));
+            const adhesiveCoverage = toNumber(document.getElementById('adhesiveCoverage').value);
+
+            if (!totalAreaM2 || !tileWidthMm || !tileHeightMm) {
+                updateResults(0, 0, 0, 0);
+                return;
+            }
+
+            const tileWidthM = (tileWidthMm + groutMm) / 1000; // m
+            const tileHeightM = (tileHeightMm + groutMm) / 1000; // m
+            const effectiveTileArea = tileWidthM * tileHeightM; // m² per tile incl grout
+
+            if (effectiveTileArea <= 0) {
+                updateResults(totalAreaM2, 0, 0, 0);
+                return;
+            }
+
+            const tilesExact = totalAreaM2 / effectiveTileArea;
+            const tilesWithWaste = Math.ceil(tilesExact * (1 + wastagePct / 100));
+            const boxes = Math.ceil(tilesWithWaste / tilesPerBox);
+            const adhesiveBags = adhesiveCoverage > 0 ? Math.ceil(totalAreaM2 / adhesiveCoverage) : 0;
+
+            updateResults(totalAreaM2, tilesWithWaste, boxes, adhesiveBags);
+        }
+
+        function updateResults(area, tiles, boxes, bags) {
+            document.getElementById('netArea').textContent = area.toFixed(2) + ' m²';
+            document.getElementById('tilesNeeded').textContent = tiles.toString();
+            document.getElementById('boxes').textContent = boxes.toString();
+            document.getElementById('adhesiveBags').textContent = bags.toString();
+        }
+
+        function resetForm() {
+            clearAreas();
+            document.getElementById('tileWidth').value = '';
+            document.getElementById('tileHeight').value = '';
+            document.getElementById('grout').value = '';
+            document.getElementById('wastage').value = '';
+            document.getElementById('tilesPerBox').value = '';
+            document.getElementById('adhesiveCoverage').value = '';
+            updateResults(0, 0, 0, 0);
+            updateTotalAreaDisplay(0);
+        }
+
+        document.getElementById('calculateBtn').addEventListener('click', calculate);
+        document.getElementById('resetBtn').addEventListener('click', resetForm);
+        document.getElementById('addAreaBtn').addEventListener('click', () => addAreaRow());
+
+        function addAreaRow(initial = {}) {
+            const tbody = document.getElementById('areasBody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="px-3 py-2"><input type="text" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. Wall 1" value="${initial.name || ''}"></td>
+                <td class="px-3 py-2">
+                    <select class="quantity-input text-[var(--calidwell-dark-text)]">
+                        <option value="Wall" ${initial.type === 'Floor' ? '' : 'selected'}>Wall</option>
+                        <option value="Floor" ${initial.type === 'Floor' ? 'selected' : ''}>Floor</option>
+                    </select>
+                </td>
+                <td class="px-3 py-2 min-w-[110px]"><input type="number" step="0.01" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="0.00" value="${initial.width ?? ''}"></td>
+                <td class="px-3 py-2 min-w-[130px]"><input type="number" step="0.01" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="0.00" value="${initial.height ?? ''}"></td>
+                <td class="px-3 py-2 min-w-[80px]"><input type="number" step="1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="1" value="${initial.qty ?? 1}"></td>
+                <td class="px-3 py-2"><span class="row-area font-medium text-[var(--calidwell-general-text)]">0.00</span></td>
+                <td class="px-3 py-2"><button class="remove-area bg-[var(--calidwell-primary-accent)] hover:bg-[var(--calidwell-secondary-accent)] text-white px-3 py-2 rounded-md">Remove</button></td>
+            `;
+            tbody.appendChild(tr);
+
+            const inputs = tr.querySelectorAll('input');
+            inputs.forEach(input => input.addEventListener('input', () => { recalcRow(tr); calculate(); }));
+            tr.querySelector('select').addEventListener('change', () => { recalcRow(tr); calculate(); });
+            tr.querySelector('.remove-area').addEventListener('click', () => { tr.remove(); updateTotalAreaDisplay(computeTotalAreaFromRows()); calculate(); });
+
+            recalcRow(tr);
+        }
+
+        function recalcRow(tr) {
+            const width = toNumber(tr.querySelectorAll('input')[1].value);
+            const height = toNumber(tr.querySelectorAll('input')[2].value);
+            const qty = Math.max(1, Math.floor(toNumber(tr.querySelectorAll('input')[3].value)) || 1);
+            const area = width * height * qty;
+            tr.querySelector('.row-area').textContent = (isFinite(area) ? area : 0).toFixed(2);
+            updateTotalAreaDisplay(computeTotalAreaFromRows());
+        }
+
+        function computeTotalAreaFromRows() {
+            const rows = document.querySelectorAll('#areasBody tr');
+            let total = 0;
+            rows.forEach(tr => {
+                const width = toNumber(tr.querySelectorAll('input')[1].value);
+                const height = toNumber(tr.querySelectorAll('input')[2].value);
+                const qty = Math.max(1, Math.floor(toNumber(tr.querySelectorAll('input')[3].value)) || 1);
+                if (width > 0 && height > 0 && qty > 0) {
+                    total += width * height * qty;
+                }
+            });
+            return total;
+        }
+
+        function updateTotalAreaDisplay(value) {
+            document.getElementById('totalArea').textContent = value.toFixed(2) + ' m²';
+        }
+
+        function clearAreas() {
+            document.getElementById('areasBody').innerHTML = '';
+        }
+
+        // Sensible defaults
+        // Default areas
+        addAreaRow({ name: 'Wall 1', type: 'Wall', width: 2.4, height: 2.4, qty: 1 });
+        addAreaRow({ name: 'Floor', type: 'Floor', width: 4.2, height: 3.6, qty: 1 });
+        document.getElementById('tileWidth').value = 300;
+        document.getElementById('tileHeight').value = 300;
+        document.getElementById('grout').value = 3;
+        document.getElementById('wastage').value = 10;
+        document.getElementById('tilesPerBox').value = 9;
+        document.getElementById('adhesiveCoverage').value = 5;
+        updateTotalAreaDisplay(computeTotalAreaFromRows());
+        calculate();
+    </script>
+</body>
+</html>
+
