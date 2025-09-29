@@ -61,6 +61,15 @@
 
         <!-- Slab Parameters -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Preset (optional)</label>
+                <select id="preset" class="quantity-input text-[var(--calidwell-dark-text)]">
+                    <option value="">Select a preset</option>
+                    <option value='{"w":450,"l":450,"pack":44}'>450 x 450 mm (44 slabs/pack)</option>
+                    <option value='{"w":600,"l":600,"pack":20}'>600 x 600 mm (20 slabs/pack)</option>
+                    <option value='{"w":900,"l":600,"pack":25}'>900 x 600 mm (25 slabs/pack)</option>
+                </select>
+            </div>
             <div>
                 <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Slab Width (mm)</label>
                 <input id="slabWidth" type="number" step="1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 600">
@@ -110,6 +119,34 @@
                     <li>Wastage applied to slab count, not bedding.</li>
                     <li>Round up packs and bags to whole numbers.</li>
                 </ul>
+            </div>
+        </div>
+
+        <!-- Optional: Base & Bedding Volumes -->
+        <div class="mt-6 p-4 bg-[var(--calidwell-light-bg-2)] rounded-lg border border-[var(--calidwell-border-grey)]">
+            <h2 class="text-lg font-semibold text-[var(--calidwell-dark-text)] mb-3">Optional: Base & Bedding</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                <div>
+                    <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Sub-base Depth (mm)</label>
+                    <input id="subbaseDepth" type="number" step="1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 100">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Bedding Depth (mm)</label>
+                    <input id="beddingDepth" type="number" step="1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 40">
+                </div>
+                <div class="flex items-end">
+                    <button id="calcVolumesBtn" class="w-full bg-[var(--calidwell-primary-accent)] hover:bg-[var(--calidwell-secondary-accent)] text-white font-semibold py-3 px-4 rounded-md shadow">Update Volumes</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-[var(--calidwell-dark-text)]">
+                <div class="bg-white border border-[var(--calidwell-border-grey)] rounded-md px-3 py-2 flex justify-between">
+                    <span class="text-[var(--calidwell-general-text)]">Sub-base Volume:</span>
+                    <span id="subbaseVolume" class="font-semibold">0.00 m³</span>
+                </div>
+                <div class="bg-white border border-[var(--calidwell-border-grey)] rounded-md px-3 py-2 flex justify-between">
+                    <span class="text-[var(--calidwell-general-text)]">Bedding Volume:</span>
+                    <span id="beddingVolume" class="font-semibold">0.00 m³</span>
+                </div>
             </div>
         </div>
     </div>
@@ -173,6 +210,8 @@
         document.getElementById('calculateBtn').addEventListener('click', calculate);
         document.getElementById('resetBtn').addEventListener('click', resetForm);
         document.getElementById('addAreaBtn').addEventListener('click', () => addAreaRow());
+        document.getElementById('preset').addEventListener('change', onPresetChange);
+        document.getElementById('calcVolumesBtn').addEventListener('click', updateVolumes);
 
         function addAreaRow(initial = {}) {
             const tbody = document.getElementById('areasBody');
@@ -232,6 +271,30 @@
             document.getElementById('areasBody').innerHTML = '';
         }
 
+        function onPresetChange() {
+            try {
+                const raw = document.getElementById('preset').value;
+                if (!raw) return;
+                const preset = JSON.parse(raw);
+                if (preset.w) document.getElementById('slabWidth').value = preset.w;
+                if (preset.l) document.getElementById('slabLength').value = preset.l;
+                if (preset.pack) document.getElementById('slabsPerPack').value = preset.pack;
+                calculate();
+            } catch (e) {
+                // ignore
+            }
+        }
+
+        function updateVolumes() {
+            const area = computeTotalAreaFromRows();
+            const subbaseDepthMm = toNumber(document.getElementById('subbaseDepth').value);
+            const beddingDepthMm = toNumber(document.getElementById('beddingDepth').value);
+            const subbaseVolume = area * (subbaseDepthMm / 1000);
+            const beddingVolume = area * (beddingDepthMm / 1000);
+            document.getElementById('subbaseVolume').textContent = (isFinite(subbaseVolume) ? subbaseVolume : 0).toFixed(2) + ' m³';
+            document.getElementById('beddingVolume').textContent = (isFinite(beddingVolume) ? beddingVolume : 0).toFixed(2) + ' m³';
+        }
+
         // Defaults
         addAreaRow({ name: 'Patio 1', type: 'Patio', width: 5.0, length: 3.0, qty: 1 });
         document.getElementById('slabWidth').value = 600;
@@ -242,6 +305,7 @@
         document.getElementById('beddingCoverage').value = 4;
         updateTotalAreaDisplay(computeTotalAreaFromRows());
         calculate();
+        updateVolumes();
     </script>
 </body>
 </html>
