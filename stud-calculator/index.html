@@ -52,6 +52,28 @@
             </div>
         </div>
 
+        <!-- Openings (Doors/Windows) -->
+        <div class="mb-6 p-4 bg-[var(--calidwell-light-bg-2)] rounded-lg border border-[var(--calidwell-border-grey)]">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-xl font-semibold text-[var(--calidwell-dark-text)]">Openings (optional)</h2>
+                <button id="addOpeningBtn" class="bg-[var(--calidwell-primary-accent)] hover:bg-[var(--calidwell-secondary-accent)] text-white font-semibold py-2 px-4 rounded-md shadow transition">Add Opening</button>
+            </div>
+            <div class="overflow-x-auto rounded-md border border-[var(--calidwell-border-grey)] bg-white">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-[var(--calidwell-light-bg-1)] text-[var(--calidwell-general-text)]">
+                        <tr>
+                            <th class="text-left px-3 py-2">Name</th>
+                            <th class="text-left px-3 py-2">Width (m)</th>
+                            <th class="text-left px-3 py-2">Height (m)</th>
+                            <th class="text-left px-3 py-2">Qty</th>
+                            <th class="text-left px-3 py-2">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="openingsBody" class="divide-y divide-[var(--calidwell-border-grey)] text-[var(--calidwell-dark-text)]"></tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Parameters -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <div>
@@ -108,6 +130,7 @@
         document.getElementById('calculateBtn').addEventListener('click', calculate);
         document.getElementById('resetBtn').addEventListener('click', resetForm);
         document.getElementById('addWallBtn').addEventListener('click', () => addWallRow());
+        document.getElementById('addOpeningBtn').addEventListener('click', () => addOpeningRow());
 
         function addWallRow(initial = {}) {
             const tbody = document.getElementById('wallsBody');
@@ -136,6 +159,7 @@
 
         function resetForm() {
             document.getElementById('wallsBody').innerHTML = '';
+            document.getElementById('openingsBody').innerHTML = '';
             document.getElementById('cornerAllowanceM').value = '';
             document.getElementById('numCorners').value = '';
             document.getElementById('estimateMode').value = 'calc';
@@ -147,6 +171,7 @@
             let studsCount = 0;
             let nogginLm = 0;
             let platesLm = 0;
+            let totalWallLength = 0;
 
             rows.forEach(tr => {
                 const length = toNumber(tr.querySelectorAll('input')[1].value);
@@ -159,6 +184,7 @@
 
                 const area = length * height * qty;
                 totalArea += area;
+                totalWallLength += length * qty;
 
                 // Studs per single wall run: studs at each end + at regular centers across length
                 const centersM = centersMm / 1000;
@@ -172,6 +198,33 @@
                 // Plates: head + floor per run, each equals the wall length
                 platesLm += length * 2 * qty;
             });
+
+            // Openings adjustments
+            const openings = document.querySelectorAll('#openingsBody tr');
+            let openingsArea = 0;
+            let openingsWidthTotal = 0;
+            let openingCount = 0;
+            openings.forEach(tr => {
+                const width = toNumber(tr.querySelectorAll('input')[0].value);
+                const height = toNumber(tr.querySelectorAll('input')[1].value);
+                const qty = Math.max(0, Math.floor(toNumber(tr.querySelectorAll('input')[2].value)) || 0);
+                if (width > 0 && height > 0 && qty > 0) {
+                    openingsArea += width * height * qty;
+                    openingsWidthTotal += width * qty;
+                    openingCount += qty;
+                }
+            });
+
+            // Subtract openings area from wall area (not below zero)
+            totalArea = Math.max(0, totalArea - openingsArea);
+
+            // Add trimmer studs: 2 per opening
+            studsCount += openingCount * 2;
+
+            // Reduce noggin length based on openings horizontally crossing
+            // Estimate rows per meter from current nogginLm and wall length
+            const rowsPerMeter = totalWallLength > 0 ? (nogginLm / totalWallLength) : 0;
+            nogginLm = Math.max(0, nogginLm - openingsWidthTotal * rowsPerMeter);
 
             // Corner allowance
             const cornerAllowanceM = toNumber(document.getElementById('cornerAllowanceM').value);
@@ -209,9 +262,27 @@
             return count > 0 ? totalHeight / count : 0;
         }
 
+        function addOpeningRow(initial = {}) {
+            const tbody = document.getElementById('openingsBody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="px-3 py-2"><input type="text" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. Door" value="${initial.name || ''}"></td>
+                <td class="px-3 py-2 min-w-[110px]"><input type="number" step="0.01" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="0.90" value="${initial.width ?? ''}"></td>
+                <td class="px-3 py-2 min-w-[110px]"><input type="number" step="0.01" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="2.00" value="${initial.height ?? ''}"></td>
+                <td class="px-3 py-2 min-w-[80px]"><input type="number" step="1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="1" value="${initial.qty ?? 1}"></td>
+                <td class="px-3 py-2"><button class="remove-opening bg-[var(--calidwell-primary-accent)] hover:bg-[var(--calidwell-secondary-accent)] text-white px-3 py-2 rounded-md">Remove</button></td>
+            `;
+            tbody.appendChild(tr);
+
+            const inputs = tr.querySelectorAll('input');
+            inputs.forEach(input => input.addEventListener('input', () => calculate()));
+            tr.querySelector('.remove-opening').addEventListener('click', () => { tr.remove(); calculate(); });
+        }
+
         // Defaults
         addWallRow({ name: 'Wall A', length: 3.6, height: 2.4, centers: 600, noggins: 1, qty: 1 });
         addWallRow({ name: 'Wall B', length: 2.4, height: 2.4, centers: 400, noggins: 1, qty: 1 });
+        addOpeningRow({ name: 'Door', width: 0.9, height: 2.0, qty: 1 });
         document.getElementById('cornerAllowanceM').value = 0.6;
         document.getElementById('numCorners').value = 2;
         document.getElementById('estimateMode').value = 'calc';
