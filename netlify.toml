@@ -1,5 +1,5 @@
 [build]
-  publish = "brick-block-calculator"
+  publish = "."
   command = ""
 
 [[redirects]]
