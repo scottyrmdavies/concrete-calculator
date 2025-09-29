@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paving Slab Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --calidwell-primary-accent: #30C7B5;
+            --calidwell-secondary-accent: #00AC97;
+            --calidwell-dark-text: #14261C;
+            --calidwell-general-text: #4F5655;
+            --calidwell-light-bg-1: #F3F6F3;
+            --calidwell-light-bg-2: #F6F7F8;
+            --calidwell-white: #FFFFFF;
+            --calidwell-border-grey: #dddddd;
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--calidwell-light-bg-1); }
+        .quantity-input { padding: 0.75rem; border-width: 2px; border-color: var(--calidwell-border-grey); border-radius: 0.375rem; width: 100%; box-sizing: border-box; }
+        .quantity-input:focus { border-color: var(--calidwell-primary-accent); box-shadow: 0 0 0 3px rgba(48,199,181,0.5); outline: none; }
+        input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
+    </style>
+    <meta name="description" content="Calculate paving slabs, packs, and bedding based on areas and slab size.">
+</head>
+<body class="p-4 sm:p-6 md:p-8">
+    <div class="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-lg shadow-xl">
+        <h1 class="text-3xl font-bold text-[var(--calidwell-dark-text)] mb-6 text-center">Paving Slab Calculator</h1>
+
+        <!-- Areas (Patios/Paths) -->
+        <div class="mb-6 p-4 bg-[var(--calidwell-light-bg-2)] rounded-lg border border-[var(--calidwell-border-grey)]">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-xl font-semibold text-[var(--calidwell-dark-text)]">Areas</h2>
+                <button id="addAreaBtn" class="bg-[var(--calidwell-primary-accent)] hover:bg-[var(--calidwell-secondary-accent)] text-white font-semibold py-2 px-4 rounded-md shadow transition">Add Area</button>
+            </div>
+            <div class="overflow-x-auto rounded-md border border-[var(--calidwell-border-grey)] bg-white">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-[var(--calidwell-light-bg-1)] text-[var(--calidwell-general-text)]">
+                        <tr>
+                            <th class="text-left px-3 py-2">Name</th>
+                            <th class="text-left px-3 py-2">Type</th>
+                            <th class="text-left px-3 py-2">Width (m)</th>
+                            <th class="text-left px-3 py-2">Length (m)</th>
+                            <th class="text-left px-3 py-2">Qty</th>
+                            <th class="text-left px-3 py-2">Area (m²)</th>
+                            <th class="text-left px-3 py-2">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="areasBody" class="divide-y divide-[var(--calidwell-border-grey)] text-[var(--calidwell-dark-text)]"></tbody>
+                </table>
+            </div>
+            <div class="mt-3 flex justify-end text-sm text-[var(--calidwell-dark-text)]">
+                <div class="bg-white border border-[var(--calidwell-border-grey)] rounded-md px-3 py-2">
+                    <span class="text-[var(--calidwell-general-text)]">Total Area:</span>
+                    <span id="totalArea" class="font-semibold">0.00 m²</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slab Parameters -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Slab Width (mm)</label>
+                <input id="slabWidth" type="number" step="1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 600">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Slab Length (mm)</label>
+                <input id="slabLength" type="number" step="1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 600">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Joint (mm)</label>
+                <input id="joint" type="number" step="0.5" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 5">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Wastage Allowance (%)</label>
+                <input id="wastage" type="number" step="1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 10">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Slabs per Pack</label>
+                <input id="slabsPerPack" type="number" step="1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 20">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Bedding Coverage (m² per bag)</label>
+                <input id="beddingCoverage" type="number" step="0.1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 4">
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4 mb-6">
+            <button id="calculateBtn" class="w-full sm:w-auto bg-[var(--calidwell-primary-accent)] hover:bg-[var(--calidwell-secondary-accent)] text-white font-bold py-3 px-6 rounded-md shadow-lg transition duration-200 ease-in-out transform hover:scale-105">Calculate</button>
+            <button id="resetBtn" class="w-full sm:w-auto bg-white text-[var(--calidwell-dark-text)] border border-[var(--calidwell-border-grey)] font-bold py-3 px-6 rounded-md shadow-sm">Reset</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-[var(--calidwell-light-bg-2)] p-4 rounded-md border border-[var(--calidwell-border-grey)]">
+                <h2 class="text-lg font-semibold text-[var(--calidwell-dark-text)] mb-2">Results</h2>
+                <ul class="text-sm text-[var(--calidwell-dark-text)] space-y-1">
+                    <li><span class="text-[var(--calidwell-general-text)]">Net Area:</span> <span id="netArea" class="font-semibold">0.00 m²</span></li>
+                    <li><span class="text-[var(--calidwell-general-text)]">Slabs Needed (incl. waste):</span> <span id="slabsNeeded" class="font-semibold">0</span></li>
+                    <li><span class="text-[var(--calidwell-general-text)]">Packs to Order:</span> <span id="packs" class="font-semibold">0</span></li>
+                    <li><span class="text-[var(--calidwell-general-text)]">Bedding Bags:</span> <span id="beddingBags" class="font-semibold">0</span></li>
+                </ul>
+            </div>
+
+            <div class="bg-[var(--calidwell-light-bg-2)] p-4 rounded-md border border-[var(--calidwell-border-grey)]">
+                <h2 class="text-lg font-semibold text-[var(--calidwell-dark-text)] mb-2">Notes</h2>
+                <ul class="list-disc pl-5 text-sm text-[var(--calidwell-general-text)] space-y-1">
+                    <li>Effective slab size includes joint width.</li>
+                    <li>Wastage applied to slab count, not bedding.</li>
+                    <li>Round up packs and bags to whole numbers.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toNumber(value) {
+            const n = parseFloat(value);
+            return isNaN(n) ? 0 : n;
+        }
+
+        function calculate() {
+            const totalAreaM2 = computeTotalAreaFromRows();
+            const slabWidthMm = toNumber(document.getElementById('slabWidth').value);
+            const slabLengthMm = toNumber(document.getElementById('slabLength').value);
+            const jointMm = toNumber(document.getElementById('joint').value);
+            const wastagePct = toNumber(document.getElementById('wastage').value);
+            const slabsPerPack = Math.max(1, Math.floor(toNumber(document.getElementById('slabsPerPack').value)));
+            const beddingCoverage = toNumber(document.getElementById('beddingCoverage').value);
+
+            if (!totalAreaM2 || !slabWidthMm || !slabLengthMm) {
+                updateResults(0, 0, 0, 0);
+                return;
+            }
+
+            const slabWidthM = (slabWidthMm + jointMm) / 1000;
+            const slabLengthM = (slabLengthMm + jointMm) / 1000;
+            const effectiveSlabArea = slabWidthM * slabLengthM;
+
+            if (effectiveSlabArea <= 0) {
+                updateResults(totalAreaM2, 0, 0, 0);
+                return;
+            }
+
+            const slabsExact = totalAreaM2 / effectiveSlabArea;
+            const slabsWithWaste = Math.ceil(slabsExact * (1 + wastagePct / 100));
+            const packs = Math.ceil(slabsWithWaste / slabsPerPack);
+            const beddingBags = beddingCoverage > 0 ? Math.ceil(totalAreaM2 / beddingCoverage) : 0;
+
+            updateResults(totalAreaM2, slabsWithWaste, packs, beddingBags);
+        }
+
+        function updateResults(area, slabs, packs, bags) {
+            document.getElementById('netArea').textContent = area.toFixed(2) + ' m²';
+            document.getElementById('slabsNeeded').textContent = slabs.toString();
+            document.getElementById('packs').textContent = packs.toString();
+            document.getElementById('beddingBags').textContent = bags.toString();
+        }
+
+        function resetForm() {
+            clearAreas();
+            document.getElementById('slabWidth').value = '';
+            document.getElementById('slabLength').value = '';
+            document.getElementById('joint').value = '';
+            document.getElementById('wastage').value = '';
+            document.getElementById('slabsPerPack').value = '';
+            document.getElementById('beddingCoverage').value = '';
+            updateResults(0, 0, 0, 0);
+            updateTotalAreaDisplay(0);
+        }
+
+        document.getElementById('calculateBtn').addEventListener('click', calculate);
+        document.getElementById('resetBtn').addEventListener('click', resetForm);
+        document.getElementById('addAreaBtn').addEventListener('click', () => addAreaRow());
+
+        function addAreaRow(initial = {}) {
+            const tbody = document.getElementById('areasBody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="px-3 py-2"><input type="text" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. Patio 1" value="${initial.name || ''}"></td>
+                <td class="px-3 py-2">
+                    <select class="quantity-input text-[var(--calidwell-dark-text)]">
+                        <option value="Patio" ${initial.type === 'Path' ? '' : 'selected'}>Patio</option>
+                        <option value="Path" ${initial.type === 'Path' ? 'selected' : ''}>Path</option>
+                    </select>
+                </td>
+                <td class="px-3 py-2 min-w-[110px]"><input type="number" step="0.01" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="0.00" value="${initial.width ?? ''}"></td>
+                <td class="px-3 py-2 min-w-[130px]"><input type="number" step="0.01" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="0.00" value="${initial.length ?? ''}"></td>
+                <td class="px-3 py-2 min-w-[80px]"><input type="number" step="1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="1" value="${initial.qty ?? 1}"></td>
+                <td class="px-3 py-2"><span class="row-area font-medium text-[var(--calidwell-general-text)]">0.00</span></td>
+                <td class="px-3 py-2"><button class="remove-area bg-[var(--calidwell-primary-accent)] hover:bg-[var(--calidwell-secondary-accent)] text-white px-3 py-2 rounded-md">Remove</button></td>
+            `;
+            tbody.appendChild(tr);
+
+            const inputs = tr.querySelectorAll('input');
+            inputs.forEach(input => input.addEventListener('input', () => { recalcRow(tr); calculate(); }));
+            tr.querySelector('select').addEventListener('change', () => { recalcRow(tr); calculate(); });
+            tr.querySelector('.remove-area').addEventListener('click', () => { tr.remove(); updateTotalAreaDisplay(computeTotalAreaFromRows()); calculate(); });
+
+            recalcRow(tr);
+        }
+
+        function recalcRow(tr) {
+            const width = toNumber(tr.querySelectorAll('input')[1].value);
+            const length = toNumber(tr.querySelectorAll('input')[2].value);
+            const qty = Math.max(1, Math.floor(toNumber(tr.querySelectorAll('input')[3].value)) || 1);
+            const area = width * length * qty;
+            tr.querySelector('.row-area').textContent = (isFinite(area) ? area : 0).toFixed(2);
+            updateTotalAreaDisplay(computeTotalAreaFromRows());
+        }
+
+        function computeTotalAreaFromRows() {
+            const rows = document.querySelectorAll('#areasBody tr');
+            let total = 0;
+            rows.forEach(tr => {
+                const width = toNumber(tr.querySelectorAll('input')[1].value);
+                const length = toNumber(tr.querySelectorAll('input')[2].value);
+                const qty = Math.max(1, Math.floor(toNumber(tr.querySelectorAll('input')[3].value)) || 1);
+                if (width > 0 && length > 0 && qty > 0) {
+                    total += width * length * qty;
+                }
+            });
+            return total;
+        }
+
+        function updateTotalAreaDisplay(value) {
+            document.getElementById('totalArea').textContent = value.toFixed(2) + ' m²';
+        }
+
+        function clearAreas() {
+            document.getElementById('areasBody').innerHTML = '';
+        }
+
+        // Defaults
+        addAreaRow({ name: 'Patio 1', type: 'Patio', width: 5.0, length: 3.0, qty: 1 });
+        document.getElementById('slabWidth').value = 600;
+        document.getElementById('slabLength').value = 600;
+        document.getElementById('joint').value = 5;
+        document.getElementById('wastage').value = 10;
+        document.getElementById('slabsPerPack').value = 20;
+        document.getElementById('beddingCoverage').value = 4;
+        updateTotalAreaDisplay(computeTotalAreaFromRows());
+        calculate();
+    </script>
+</body>
+</html>
+
