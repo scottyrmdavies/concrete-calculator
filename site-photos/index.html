@@ -20,7 +20,7 @@
         body { font-family: 'Inter', sans-serif; background-color: var(--calidwell-light-bg-1); }
         .quantity-input { padding: 0.75rem; border-width: 2px; border-color: var(--calidwell-border-grey); border-radius: 0.375rem; width: 100%; box-sizing: border-box; }
         .quantity-input:focus { border-color: var(--calidwell-primary-accent); box-shadow: 0 0 0 3px rgba(48,199,181,0.5); outline: none; }
-        .btn { background-color: var(--calidwell-primary-accent); color: white; font-weight: 700; padding: 0.75rem 1.25rem; border-radius: 0.375rem; }
+        .btn { background-color: var(--calidwell-primary-accent); color: white; font-weight: 700; padding: 0.75rem 1.25rem; border-radius: 0.375rem; cursor: pointer; }
         .btn:hover { background-color: var(--calidwell-secondary-accent); }
     </style>
 </head>
@@ -28,41 +28,31 @@
     <div class="max-w-5xl mx-auto bg-white p-6 md:p-8 rounded-lg shadow-xl">
         <h1 class="text-3xl font-bold text-[var(--calidwell-dark-text)] mb-6 text-center">Site Photos</h1>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div>
-                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Project</label>
-                <input id="project" type="text" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. Plot 12 - Oak Close">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Job/Area</label>
-                <input id="job" type="text" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. Foundation trench">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Tags (comma separated)</label>
-                <input id="tags" type="text" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. footing, inspection">
-            </div>
+        <div class="mb-6 p-4 bg-[var(--calidwell-light-bg-2)] rounded-lg border border-[var(--calidwell-border-grey)]">
+            <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-2">Project Name</label>
+            <input id="project" type="text" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. Plot 12 - Oak Close">
+            <p class="text-xs text-[var(--calidwell-general-text)] mt-2">Photos taken at this location will be linked to this project.</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end mb-6">
-            <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Capture/Upload Photo</label>
-                <input id="fileInput" type="file" accept="image/*" capture="environment" class="w-full text-[var(--calidwell-dark-text)]">
-            </div>
-            <div class="flex gap-3">
-                <button id="saveBtn" class="btn w-full">Save Photo</button>
-                <button id="exportBtn" class="btn w-full">Export ZIP</button>
-            </div>
+        <input id="fileInput" type="file" accept="image/*" capture="environment" multiple class="hidden">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <button id="cameraBtn" class="btn flex items-center justify-center gap-3 py-6 text-lg">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h4l2-2h6l2 2h4v14H3V5zm9 3a4 4 0 100 8 4 4 0 000-8z"></path>
+                </svg>
+                Take Photos
+            </button>
+            <button id="exportBtn" class="btn flex items-center justify-center gap-3 py-6 text-lg">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v4h16v-4M12 4v12m0 0l-4-4m4 4l4-4"></path>
+                </svg>
+                Export ZIP
+            </button>
         </div>
 
-        <div class="mb-4 flex flex-col md:flex-row gap-4 md:items-center">
-            <div class="flex gap-3 items-center">
-                <label class="text-sm text-[var(--calidwell-general-text)]">Filter by Project:</label>
-                <input id="filterProject" type="text" class="quantity-input text-[var(--calidwell-dark-text)] md:w-64" placeholder="Type to filter">
-            </div>
-            <div class="flex gap-3 items-center">
-                <label class="text-sm text-[var(--calidwell-general-text)]">Filter by Job:</label>
-                <input id="filterJob" type="text" class="quantity-input text-[var(--calidwell-dark-text)] md:w-64" placeholder="Type to filter">
-            </div>
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-2">Filter by Project:</label>
+            <input id="filterProject" type="text" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="Type to filter projects">
         </div>
 
         <div id="gallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
@@ -74,13 +64,13 @@
         let db;
 
         const openDB = () => new Promise((resolve, reject) => {
-            const req = indexedDB.open(dbName, 1);
+            const req = indexedDB.open(dbName, 2);
             req.onupgradeneeded = (e) => {
                 const db = e.target.result;
                 if (!db.objectStoreNames.contains(storeName)) {
                     const store = db.createObjectStore(storeName, { keyPath: 'id', autoIncrement: true });
                     store.createIndex('project', 'project', { unique: false });
-                    store.createIndex('job', 'job', { unique: false });
+                    store.createIndex('location', 'location', { unique: false });
                     store.createIndex('createdAt', 'createdAt', { unique: false });
                 }
             };
@@ -106,34 +96,68 @@
             });
         }
 
-        async function savePhoto() {
-            const file = document.getElementById('fileInput').files[0];
-            if (!file) { alert('Choose a photo first.'); return; }
-
-            const project = document.getElementById('project').value.trim();
-            const job = document.getElementById('job').value.trim();
-            const tags = document.getElementById('tags').value.trim();
-            const createdAt = new Date().toISOString();
-
-            const buffer = await arrayBufferFromFile(file);
-            const tx = db.transaction(storeName, 'readwrite');
-            const store = tx.objectStore(storeName);
-            const record = { project, job, tags, createdAt, mime: file.type, data: buffer };
-            await new Promise((resolve, reject) => {
-                const req = store.add(record);
-                req.onsuccess = resolve; req.onerror = () => reject(req.error);
+        function getCurrentLocation() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) { resolve(null); return; }
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                    () => resolve(null),
+                    { timeout: 5000 }
+                );
             });
-            await tx.complete;
+        }
+
+        function findProjectByLocation(location, allPhotos) {
+            if (!location) return null;
+            const THRESHOLD_KM = 0.1; // ~100m
+            for (const photo of allPhotos) {
+                if (!photo.location) continue;
+                const dist = haversineDistance(location.lat, location.lng, photo.location.lat, photo.location.lng);
+                if (dist < THRESHOLD_KM && photo.project) return photo.project;
+            }
+            return null;
+        }
+
+        function haversineDistance(lat1, lng1, lat2, lng2) {
+            const R = 6371; // Earth radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLng/2) * Math.sin(dLng/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        async function savePhotos() {
+            const files = document.getElementById('fileInput').files;
+            if (!files || files.length === 0) { alert('Choose photos first.'); return; }
+
+            const location = await getCurrentLocation();
+            const allPhotos = await fetchAll();
+            const project = document.getElementById('project').value.trim();
+            const autoProject = findProjectByLocation(location, allPhotos);
+            const finalProject = autoProject || project || 'Untitled Project';
+
+            for (const file of files) {
+                const createdAt = new Date().toISOString();
+                const buffer = await arrayBufferFromFile(file);
+                const tx = db.transaction(storeName, 'readwrite');
+                const store = tx.objectStore(storeName);
+                const record = { project: finalProject, location, createdAt, mime: file.type, data: buffer };
+                await new Promise((resolve, reject) => {
+                    const req = store.add(record);
+                    req.onsuccess = resolve; req.onerror = () => reject(req.error);
+                });
+            }
             document.getElementById('fileInput').value = '';
             await renderGallery();
         }
 
         function matchesFilters(item) {
             const fp = document.getElementById('filterProject').value.trim().toLowerCase();
-            const fj = document.getElementById('filterJob').value.trim().toLowerCase();
             const p = (item.project || '').toLowerCase();
-            const j = (item.job || '').toLowerCase();
-            return (!fp || p.includes(fp)) && (!fj || j.includes(fj));
+            return (!fp || p.includes(fp));
         }
 
         async function fetchAll() {
@@ -171,12 +195,11 @@
                     <img src="${url}" class="w-full h-48 object-cover" alt="photo" />
                     <div class="p-3 text-sm text-[var(--calidwell-dark-text)]">
                         <div class="font-semibold">${item.project || 'Untitled Project'}</div>
-                        <div class="text-[var(--calidwell-general-text)]">${item.job || '—'}</div>
                         <div class="text-xs text-[var(--calidwell-general-text)] mt-1">${new Date(item.createdAt).toLocaleString()}</div>
-                        <div class="text-xs text-[var(--calidwell-general-text)] truncate">${item.tags || ''}</div>
+                        <div class="text-xs text-[var(--calidwell-general-text)]">${item.location ? `📍 ${item.location.lat.toFixed(5)}, ${item.location.lng.toFixed(5)}` : ''}</div>
                         <div class="mt-2 flex gap-2">
-                            <a href="${url}" download="photo.jpg" class="btn text-center py-2 px-3">Download</a>
-                            <button data-id="${item.id}" class="btn bg-red-500 hover:bg-red-600">Delete</button>
+                            <a href="${url}" download="photo.jpg" class="btn text-center py-2 px-3 text-sm">Download</a>
+                            <button data-id="${item.id}" class="btn bg-red-500 hover:bg-red-600 text-sm">Delete</button>
                         </div>
                     </div>
                 `;
@@ -194,7 +217,7 @@
             for (const item of items) {
                 if (!matchesFilters(item)) continue;
                 const ext = (item.mime && item.mime.includes('png')) ? 'png' : 'jpg';
-                const fileNameSafe = `${(item.project || 'project').replace(/[^a-z0-9-_]+/gi,'_')}_${(item.job || 'job').replace(/[^a-z0-9-_]+/gi,'_')}_${index}.${ext}`;
+                const fileNameSafe = `${(item.project || 'project').replace(/[^a-z0-9-_]+/gi,'_')}_${index}.${ext}`;
                 folder.file(fileNameSafe, item.data);
                 index++;
             }
@@ -206,10 +229,10 @@
             URL.revokeObjectURL(a.href);
         }
 
-        document.getElementById('saveBtn').addEventListener('click', savePhoto);
+        document.getElementById('cameraBtn').addEventListener('click', () => document.getElementById('fileInput').click());
+        document.getElementById('fileInput').addEventListener('change', savePhotos);
         document.getElementById('exportBtn').addEventListener('click', exportZip);
         document.getElementById('filterProject').addEventListener('input', renderGallery);
-        document.getElementById('filterJob').addEventListener('input', renderGallery);
 
         (async () => {
             db = await openDB();
@@ -218,4 +241,3 @@
     </script>
 </body>
 </html>
-
