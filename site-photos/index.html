@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Photos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <style>
+        :root {
+            --calidwell-primary-accent: #30C7B5;
+            --calidwell-secondary-accent: #00AC97;
+            --calidwell-dark-text: #14261C;
+            --calidwell-general-text: #4F5655;
+            --calidwell-light-bg-1: #F3F6F3;
+            --calidwell-light-bg-2: #F6F7F8;
+            --calidwell-white: #FFFFFF;
+            --calidwell-border-grey: #dddddd;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--calidwell-light-bg-1); }
+        .quantity-input { padding: 0.75rem; border-width: 2px; border-color: var(--calidwell-border-grey); border-radius: 0.375rem; width: 100%; box-sizing: border-box; }
+        .quantity-input:focus { border-color: var(--calidwell-primary-accent); box-shadow: 0 0 0 3px rgba(48,199,181,0.5); outline: none; }
+        .btn { background-color: var(--calidwell-primary-accent); color: white; font-weight: 700; padding: 0.75rem 1.25rem; border-radius: 0.375rem; }
+        .btn:hover { background-color: var(--calidwell-secondary-accent); }
+    </style>
+</head>
+<body class="p-4 sm:p-6 md:p-8">
+    <div class="max-w-5xl mx-auto bg-white p-6 md:p-8 rounded-lg shadow-xl">
+        <h1 class="text-3xl font-bold text-[var(--calidwell-dark-text)] mb-6 text-center">Site Photos</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div>
+                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Project</label>
+                <input id="project" type="text" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. Plot 12 - Oak Close">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Job/Area</label>
+                <input id="job" type="text" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. Foundation trench">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Tags (comma separated)</label>
+                <input id="tags" type="text" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. footing, inspection">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end mb-6">
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Capture/Upload Photo</label>
+                <input id="fileInput" type="file" accept="image/*" capture="environment" class="w-full text-[var(--calidwell-dark-text)]">
+            </div>
+            <div class="flex gap-3">
+                <button id="saveBtn" class="btn w-full">Save Photo</button>
+                <button id="exportBtn" class="btn w-full">Export ZIP</button>
+            </div>
+        </div>
+
+        <div class="mb-4 flex flex-col md:flex-row gap-4 md:items-center">
+            <div class="flex gap-3 items-center">
+                <label class="text-sm text-[var(--calidwell-general-text)]">Filter by Project:</label>
+                <input id="filterProject" type="text" class="quantity-input text-[var(--calidwell-dark-text)] md:w-64" placeholder="Type to filter">
+            </div>
+            <div class="flex gap-3 items-center">
+                <label class="text-sm text-[var(--calidwell-general-text)]">Filter by Job:</label>
+                <input id="filterJob" type="text" class="quantity-input text-[var(--calidwell-dark-text)] md:w-64" placeholder="Type to filter">
+            </div>
+        </div>
+
+        <div id="gallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+    </div>
+
+    <script>
+        const dbName = 'sitePhotosDB';
+        const storeName = 'photos';
+        let db;
+
+        const openDB = () => new Promise((resolve, reject) => {
+            const req = indexedDB.open(dbName, 1);
+            req.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(storeName)) {
+                    const store = db.createObjectStore(storeName, { keyPath: 'id', autoIncrement: true });
+                    store.createIndex('project', 'project', { unique: false });
+                    store.createIndex('job', 'job', { unique: false });
+                    store.createIndex('createdAt', 'createdAt', { unique: false });
+                }
+            };
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+
+        function arrayBufferFromFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function blobToDataUrl(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        async function savePhoto() {
+            const file = document.getElementById('fileInput').files[0];
+            if (!file) { alert('Choose a photo first.'); return; }
+
+            const project = document.getElementById('project').value.trim();
+            const job = document.getElementById('job').value.trim();
+            const tags = document.getElementById('tags').value.trim();
+            const createdAt = new Date().toISOString();
+
+            const buffer = await arrayBufferFromFile(file);
+            const tx = db.transaction(storeName, 'readwrite');
+            const store = tx.objectStore(storeName);
+            const record = { project, job, tags, createdAt, mime: file.type, data: buffer };
+            await new Promise((resolve, reject) => {
+                const req = store.add(record);
+                req.onsuccess = resolve; req.onerror = () => reject(req.error);
+            });
+            await tx.complete;
+            document.getElementById('fileInput').value = '';
+            await renderGallery();
+        }
+
+        function matchesFilters(item) {
+            const fp = document.getElementById('filterProject').value.trim().toLowerCase();
+            const fj = document.getElementById('filterJob').value.trim().toLowerCase();
+            const p = (item.project || '').toLowerCase();
+            const j = (item.job || '').toLowerCase();
+            return (!fp || p.includes(fp)) && (!fj || j.includes(fj));
+        }
+
+        async function fetchAll() {
+            const tx = db.transaction(storeName, 'readonly');
+            const store = tx.objectStore(storeName);
+            return new Promise((resolve, reject) => {
+                const req = store.getAll();
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        async function deletePhoto(id) {
+            const tx = db.transaction(storeName, 'readwrite');
+            const store = tx.objectStore(storeName);
+            await new Promise((resolve, reject) => {
+                const req = store.delete(id);
+                req.onsuccess = resolve; req.onerror = () => reject(req.error);
+            });
+            await renderGallery();
+        }
+
+        async function renderGallery() {
+            const items = await fetchAll();
+            items.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = '';
+            for (const item of items) {
+                if (!matchesFilters(item)) continue;
+                const card = document.createElement('div');
+                card.className = 'border border-[var(--calidwell-border-grey)] rounded-lg overflow-hidden bg-[var(--calidwell-white)] shadow-sm';
+                const blob = new Blob([item.data], { type: item.mime || 'image/jpeg' });
+                const url = await blobToDataUrl(blob);
+                card.innerHTML = `
+                    <img src="${url}" class="w-full h-48 object-cover" alt="photo" />
+                    <div class="p-3 text-sm text-[var(--calidwell-dark-text)]">
+                        <div class="font-semibold">${item.project || 'Untitled Project'}</div>
+                        <div class="text-[var(--calidwell-general-text)]">${item.job || '—'}</div>
+                        <div class="text-xs text-[var(--calidwell-general-text)] mt-1">${new Date(item.createdAt).toLocaleString()}</div>
+                        <div class="text-xs text-[var(--calidwell-general-text)] truncate">${item.tags || ''}</div>
+                        <div class="mt-2 flex gap-2">
+                            <a href="${url}" download="photo.jpg" class="btn text-center py-2 px-3">Download</a>
+                            <button data-id="${item.id}" class="btn bg-red-500 hover:bg-red-600">Delete</button>
+                        </div>
+                    </div>
+                `;
+                gallery.appendChild(card);
+                const delBtn = card.querySelector('button[data-id]');
+                delBtn.addEventListener('click', () => deletePhoto(item.id));
+            }
+        }
+
+        async function exportZip() {
+            const items = await fetchAll();
+            const zip = new JSZip();
+            const folder = zip.folder('site-photos');
+            let index = 1;
+            for (const item of items) {
+                if (!matchesFilters(item)) continue;
+                const ext = (item.mime && item.mime.includes('png')) ? 'png' : 'jpg';
+                const fileNameSafe = `${(item.project || 'project').replace(/[^a-z0-9-_]+/gi,'_')}_${(item.job || 'job').replace(/[^a-z0-9-_]+/gi,'_')}_${index}.${ext}`;
+                folder.file(fileNameSafe, item.data);
+                index++;
+            }
+            const blob = await zip.generateAsync({ type: 'blob' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'site-photos.zip';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        document.getElementById('saveBtn').addEventListener('click', savePhoto);
+        document.getElementById('exportBtn').addEventListener('click', exportZip);
+        document.getElementById('filterProject').addEventListener('input', renderGallery);
+        document.getElementById('filterJob').addEventListener('input', renderGallery);
+
+        (async () => {
+            db = await openDB();
+            renderGallery();
+        })();
+    </script>
+</body>
+</html>
+
