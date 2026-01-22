@@ -315,7 +315,7 @@
             <h2 class="section-title text-[var(--calidwell-dark-text)]">Final Calculation (After Openings)</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
-                    <label for="deductOpeningsArea" class="block text-sm font-medium text-gray-700 mb-1">Deduction Area (m²)</label>
+                    <label for="deductOpeningsArea" class="block text-sm font-medium text-gray-700 mb-1">Deduction Area <span data-unit="area">(m²)</span></label>
                     <input type="number" id="deductOpeningsArea" value="0" step="0.1" class="input-field">
                 </div>
                 <div>
@@ -335,7 +335,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">Sand</label>
                     <div class="flex space-x-2">
                         <div class="flex-1">
-                            <label class="block text-xs text-gray-500 mb-1">KG</label>
+                            <label class="block text-xs text-gray-500 mb-1"><span data-unit="weight">KG</span></label>
                             <div id="finalSand" class="input-display">0</div>
                         </div>
                         <div class="flex-1">
@@ -348,7 +348,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">Cement</label>
                     <div class="flex space-x-2">
                         <div class="flex-1">
-                            <label class="block text-xs text-gray-500 mb-1">KG</label>
+                            <label class="block text-xs text-gray-500 mb-1"><span data-unit="weight">KG</span></label>
                             <div id="finalCement" class="input-display">0</div>
                         </div>
                         <div class="flex-1">
