@@ -218,8 +218,8 @@
     <div class="container">
         <h1 class="text-3xl font-bold" data-regional-text>Brick & Block Calculator</h1>
         
-        <!-- Region Toggle -->
-        <div id="regionToggleContainer"></div>
+        <!-- Region Switcher -->
+        <div id="regionSwitcher"></div>
 
         <!-- Calculation Type and Wall Thickness Selection -->
         <div class="mb-8 p-6 bg-[var(--calidwell-light-bg-2)] rounded-lg shadow-inner flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-8">
@@ -512,42 +512,73 @@
         });
     </script>
 
-    <script type="module">
-        import { RegionManager, createRegionToggle } from '../region-toggle.js';
-        import { updateAllRegionalText } from '../regional-config.js';
-
-        // Initialize region manager
-        const regionManager = new RegionManager('UK');
+    <script>
+        // Simple inline region switcher
+        let currentRegion = 'UK';
         
-        // Create and add toggle
-        const toggleContainer = document.getElementById('regionToggleContainer');
-        const toggle = createRegionToggle(regionManager, {
-            showLabels: true,
-            showDescription: true,
-            compact: false
-        });
-        toggleContainer.appendChild(toggle);
-
-        // Update when region changes
-        regionManager.onChange((region, config) => {
-            updateAllRegionalText(region);
+        function createRegionButtons() {
+            const container = document.getElementById('regionSwitcher');
+            container.innerHTML = `
+                <div style="background: linear-gradient(135deg, #f3f6f3 0%, #f6f7f8 100%); border: 1px solid #dddddd; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                    <div style="font-weight: 700; color: #14261c; margin-bottom: 12px; font-size: 16px;">Select Your Region</div>
+                    <div style="display: flex; gap: 12px;">
+                        <button id="ukBtn" onclick="switchRegion('UK')" style="flex: 1; padding: 12px 16px; border: 2px solid #30C7B5; background: #e8f8f5; border-radius: 8px; cursor: pointer; font-weight: 700; color: #00AC97; font-size: 14px;">
+                            🇬🇧 UK (Metric)<br><span style="font-size: 11px; font-weight: normal; opacity: 0.8;">Metres • Kg</span>
+                        </button>
+                        <button id="usBtn" onclick="switchRegion('US')" style="flex: 1; padding: 12px 16px; border: 2px solid #dddddd; background: white; border-radius: 8px; cursor: pointer; font-weight: 600; color: #4F5655; font-size: 14px;">
+                            🇺🇸 US (Imperial)<br><span style="font-size: 11px; font-weight: normal; opacity: 0.8;">Feet • Lbs</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function switchRegion(region) {
+            currentRegion = region;
+            const ukBtn = document.getElementById('ukBtn');
+            const usBtn = document.getElementById('usBtn');
             
-            // Update brick/block terminology
-            const materialTypeEl = document.getElementById('materialType');
-            if (materialTypeEl) {
-                const currentVal = materialTypeEl.value;
-                // Just trigger recalculation
-                if (typeof window.calculateAll === 'function') {
-                    window.calculateAll();
-                }
+            if (region === 'UK') {
+                ukBtn.style.borderColor = '#30C7B5';
+                ukBtn.style.background = '#e8f8f5';
+                ukBtn.style.fontWeight = '700';
+                ukBtn.style.color = '#00AC97';
+                usBtn.style.borderColor = '#dddddd';
+                usBtn.style.background = 'white';
+                usBtn.style.fontWeight = '600';
+                usBtn.style.color = '#4F5655';
+            } else {
+                usBtn.style.borderColor = '#30C7B5';
+                usBtn.style.background = '#e8f8f5';
+                usBtn.style.fontWeight = '700';
+                usBtn.style.color = '#00AC97';
+                ukBtn.style.borderColor = '#dddddd';
+                ukBtn.style.background = 'white';
+                ukBtn.style.fontWeight = '600';
+                ukBtn.style.color = '#4F5655';
             }
+            
+            updateUnits();
+            if (typeof calculateAll === 'function') calculateAll();
+        }
+        
+        function updateUnits() {
+            const units = currentRegion === 'UK' ? 
+                { length: '(m)', area: '(m²)', weight: '(kg)' } :
+                { length: '(ft)', area: '(sq ft)', weight: '(lbs)' };
+            
+            document.querySelectorAll('[data-unit]').forEach(el => {
+                const unitType = el.getAttribute('data-unit');
+                el.textContent = units[unitType] || '';
+            });
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            createRegionButtons();
+            updateUnits();
         });
-
-        // Initial update
-        updateAllRegionalText(regionManager.getRegion());
     </script>
 
-</body>
-</html>
 </body>
 </html> 
