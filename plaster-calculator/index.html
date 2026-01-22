@@ -34,6 +34,7 @@
 </head>
 <body>
     <div class="container">
+        <div id="regionSwitcher"></div>
         <h1 class="text-3xl">Plaster Calculator</h1>
         <p class="text-[var(--calidwell-general-text)] text-center mb-6">Estimate plasterboard counts and plaster bags by area. Add multiple walls/ceilings.</p>
 
@@ -67,11 +68,11 @@
                     <tr>
                         <th>Description</th>
                         <th>Type</th>
-                        <th>Length (m)</th>
-                        <th>Height/Width (m)</th>
-                        <th>Openings (m²)</th>
-                        <th>Area (m²)</th>
-                        <th>Boards</th>
+                        <th>Length <span data-unit="length">(m)</span></th>
+                        <th>Height/Width <span data-unit="length">(m)</span></th>
+                        <th>Openings <span data-unit="area">(m²)</span></th>
+                        <th>Area <span data-unit="area">(m²)</span></th>
+                        <th><span data-i18n="plasterboard">Plasterboard</span></th>
                         <th>Skim (bags)</th>
                         <th>Actions</th>
                     </tr>
@@ -200,6 +201,14 @@
         createAreaRow('Wall 1', 'Wall', 4.0, 2.4, 0);
         createAreaRow('Ceiling 1', 'Ceiling', 4.0, 3.0, 0);
         calculateAll();
+    </script>
+
+    <script type="module">
+        import { RegionSwitcher, createRegionSwitcher } from '../region-switcher.js';
+
+        const switcher = new RegionSwitcher('UK');
+        const switcherElement = createRegionSwitcher(switcher);
+        document.getElementById('regionSwitcher').appendChild(switcherElement);
     </script>
 </body>
 </html>

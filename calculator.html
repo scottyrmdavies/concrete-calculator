@@ -123,19 +123,19 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="flex justify-between items-center bg-white p-4 rounded-md shadow-sm border border-[var(--calidwell-border-grey)]">
                     <span class="text-[var(--calidwell-general-text)] font-medium">Total Concrete Required:</span>
-                    <span id="totalConcreteVolume" class="text-[var(--calidwell-secondary-accent)] font-bold text-lg">0.00 m³</span>
+                    <span id="totalConcreteVolume" class="text-[var(--calidwell-secondary-accent)] font-bold text-lg">0.00 <span data-unit="volume">m³</span></span>
                 </div>
                 <div class="flex justify-between items-center bg-white p-4 rounded-md shadow-sm border border-[var(--calidwell-border-grey)]">
                     <span class="text-[var(--calidwell-general-text)] font-medium">Total Concrete Weight:</span>
-                    <span id="totalConcreteWeight" class="text-[var(--calidwell-secondary-accent)] font-bold text-lg">0.00 tonnes</span>
+                    <span id="totalConcreteWeight" class="text-[var(--calidwell-secondary-accent)] font-bold text-lg">0.00 <span data-unit="weightHeavy">tonnes</span></span>
                 </div>
                 <div class="flex justify-between items-center bg-white p-4 rounded-md shadow-sm border border-[var(--calidwell-border-grey)]">
                     <span class="text-[var(--calidwell-general-text)] font-medium">Total Excavated Material (Bulked):</span>
-                    <span id="totalExcavatedVolume" class="text-[var(--calidwell-red-error)] font-bold text-lg">0.00 m³</span>
+                    <span id="totalExcavatedVolume" class="text-[var(--calidwell-red-error)] font-bold text-lg">0.00 <span data-unit="volume">m³</span></span>
                 </div>
                 <div class="flex justify-between items-center bg-white p-4 rounded-md shadow-sm border border-[var(--calidwell-border-grey)]">
                     <span class="text-[var(--calidwell-general-text)] font-medium">Total Excavated Weight (for disposal):</span>
-                    <span id="totalExcavatedWeight" class="text-[var(--calidwell-red-error)] font-bold text-lg">0.00 tonnes</span>
+                    <span id="totalExcavatedWeight" class="text-[var(--calidwell-red-error)] font-bold text-lg">0.00 <span data-unit="weightHeavy">tonnes</span></span>
                 </div>
             </div>
         </div>
@@ -319,10 +319,11 @@
                 }
             });
 
-            document.getElementById('totalConcreteVolume').textContent = totalConcreteVolume.toFixed(2) + ' m³';
-            document.getElementById('totalConcreteWeight').textContent = totalConcreteWeight.toFixed(2) + ' tonnes';
-            document.getElementById('totalExcavatedVolume').textContent = totalExcavatedVolume.toFixed(2) + ' m³';
-            document.getElementById('totalExcavatedWeight').textContent = totalExcavatedWeight.toFixed(2) + ' tonnes';
+            // Update just the numbers, leave units to data-unit attributes
+            document.getElementById('totalConcreteVolume').childNodes[0].textContent = totalConcreteVolume.toFixed(2) + ' ';
+            document.getElementById('totalConcreteWeight').childNodes[0].textContent = totalConcreteWeight.toFixed(2) + ' ';
+            document.getElementById('totalExcavatedVolume').childNodes[0].textContent = totalExcavatedVolume.toFixed(2) + ' ';
+            document.getElementById('totalExcavatedWeight').childNodes[0].textContent = totalExcavatedWeight.toFixed(2) + ' ';
         }
 
         // Event listeners for buttons

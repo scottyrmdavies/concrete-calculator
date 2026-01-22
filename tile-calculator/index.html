@@ -27,6 +27,7 @@
 </head>
 <body class="p-4 sm:p-6 md:p-8">
     <div class="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-lg shadow-xl">
+        <div id="regionSwitcher"></div>
         <h1 class="text-3xl font-bold text-[var(--calidwell-dark-text)] mb-6 text-center">Tile Calculator</h1>
 
         <!-- Areas (Walls/Floors) -->
@@ -41,10 +42,10 @@
                         <tr>
                             <th class="text-left px-3 py-2">Name</th>
                             <th class="text-left px-3 py-2">Type</th>
-                            <th class="text-left px-3 py-2">Width (m)</th>
-                            <th class="text-left px-3 py-2">Height/Depth (m)</th>
+                            <th class="text-left px-3 py-2">Width <span data-unit="length">(m)</span></th>
+                            <th class="text-left px-3 py-2">Height/Depth <span data-unit="length">(m)</span></th>
                             <th class="text-left px-3 py-2">Qty</th>
-                            <th class="text-left px-3 py-2">Area (m²)</th>
+                            <th class="text-left px-3 py-2">Area <span data-unit="area">(m²)</span></th>
                             <th class="text-left px-3 py-2">Actions</th>
                         </tr>
                     </thead>
@@ -319,6 +320,14 @@
             updateTotalAreaDisplay(computeTotalAreaFromRows());
             calculate();
         }
+    </script>
+
+    <script type="module">
+        import { RegionSwitcher, createRegionSwitcher } from '../region-switcher.js';
+
+        const switcher = new RegionSwitcher('UK');
+        const switcherElement = createRegionSwitcher(switcher);
+        document.getElementById('regionSwitcher').appendChild(switcherElement);
     </script>
 </body>
 </html>

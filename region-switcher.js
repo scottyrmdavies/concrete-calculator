@@ -61,6 +61,10 @@ export class RegionSwitcher {
      * Notify all listeners
      */
     notifyListeners() {
+        // Update UI immediately
+        updateAllI18nElements(this.currentRegion);
+        
+        // Then notify listeners
         this.listeners.forEach(callback => {
             callback(this.currentRegion, this.config);
         });
@@ -251,43 +255,12 @@ export function updateAllI18nElements(region, container = document) {
 }
 
 /**
- * Update specific text by replacing keywords
+ * Update specific text by replacing keywords (DISABLED for performance)
+ * Use data-i18n attributes instead
  */
 export function updateVocabulary(region, container = document) {
-    const config = getI18nConfig(region);
-    
-    // Get all text nodes
-    const walker = document.createTreeWalker(
-        container,
-        NodeFilter.SHOW_TEXT,
-        null,
-        false
-    );
-    
-    const textNodes = [];
-    let node;
-    while (node = walker.nextNode()) {
-        textNodes.push(node);
-    }
-    
-    // Replace vocabulary in text nodes
-    textNodes.forEach(node => {
-        let text = node.textContent;
-        let modified = false;
-        
-        // Replace each vocabulary term
-        Object.keys(config.vocabulary).forEach(key => {
-            const value = config.vocabulary[key];
-            const regex = new RegExp(`\\b${key}\\b`, 'gi');
-            if (regex.test(text)) {
-                text = text.replace(regex, value);
-                modified = true;
-            }
-        });
-        
-        if (modified) {
-            node.textContent = text;
-        }
+    // Disabled - use data-i18n attributes for better performance
+    // The old tree-walking approach was too slow
     });
 }
 
