@@ -245,22 +245,22 @@
 
         <!-- Material Ratios Section -->
         <div class="mb-8 p-6 bg-[var(--calidwell-light-bg-2)] rounded-lg shadow-inner">
-            <h2 class="section-title text-[var(--calidwell-dark-text)]">Material Ratios (per square meter)</h2>
+            <h2 class="section-title text-[var(--calidwell-dark-text)]">Material Ratios (per <span data-unit="area">square meter</span>)</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
-                    <label for="sandRatio" class="block text-sm font-medium text-gray-700 mb-1">Sand (kg/m²)</label>
+                    <label for="sandRatio" class="block text-sm font-medium text-gray-700 mb-1">Sand <span data-unit="densityRatio">(kg/m²)</span></label>
                     <input type="number" id="sandRatio" value="30" step="0.1" class="input-field">
                 </div>
                 <div>
-                    <label for="cementRatio" class="block text-sm font-medium text-gray-700 mb-1">Cement (kg/m²)</label>
+                    <label for="cementRatio" class="block text-sm font-medium text-gray-700 mb-1">Cement <span data-unit="densityRatio">(kg/m²)</span></label>
                     <input type="number" id="cementRatio" value="7.5" step="0.1" class="input-field">
                 </div>
                 <div>
-                    <label for="bricksRatio" class="block text-sm font-medium text-gray-700 mb-1">Bricks (units/m²)</label>
+                    <label for="bricksRatio" class="block text-sm font-medium text-gray-700 mb-1">Bricks <span data-unit="countRatio">(units/m²)</span></label>
                     <input type="number" id="bricksRatio" value="60" step="1" class="input-field highlight-input">
                 </div>
                 <div>
-                    <label for="blocksRatio" class="block text-sm font-medium text-gray-700 mb-1">Blocks (units/m²)</label>
+                    <label for="blocksRatio" class="block text-sm font-medium text-gray-700 mb-1">Blocks <span data-unit="countRatio">(units/m²)</span></label>
                     <input type="number" id="blocksRatio" value="10" step="1" class="input-field">
                 </div>
             </div>
@@ -596,8 +596,8 @@
         function updateUnits() {
             console.log('UpdateUnits called, current region:', currentRegion);
             const units = currentRegion === 'UK' ? 
-                { length: '(m)', area: 'Meters²', weight: '(kg)' } :
-                { length: '(ft)', area: 'Sq Ft', weight: '(lbs)' };
+                { length: '(m)', area: 'Meters²', weight: '(kg)', densityRatio: '(kg/m²)', countRatio: '(units/m²)' } :
+                { length: '(ft)', area: 'Sq Ft', weight: '(lbs)', densityRatio: '(lbs/sq ft)', countRatio: '(units/sq ft)' };
             
             const elements = document.querySelectorAll('[data-unit]');
             console.log('Found', elements.length, 'data-unit elements');
