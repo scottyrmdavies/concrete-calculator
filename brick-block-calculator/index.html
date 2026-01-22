@@ -509,10 +509,12 @@
             document.getElementById('bricksRatio').addEventListener('input', calculateAll);
             document.getElementById('blocksRatio').addEventListener('input', calculateAll);
             document.getElementById('deductOpeningsArea').addEventListener('input', calculateAll);
+            
+            // Initialize region switcher
+            createRegionButtons();
+            updateUnits();
         });
-    </script>
-
-    <script>
+        
         // Simple inline region switcher
         let currentRegion = 'UK';
         
@@ -572,12 +574,6 @@
                 el.textContent = units[unitType] || '';
             });
         }
-        
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            createRegionButtons();
-            updateUnits();
-        });
     </script>
 
 </body>
