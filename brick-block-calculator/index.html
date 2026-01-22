@@ -563,8 +563,8 @@
         
         function updateUnits() {
             const units = currentRegion === 'UK' ? 
-                { length: '(m)', area: '(m²)', weight: '(kg)' } :
-                { length: '(ft)', area: '(sq ft)', weight: '(lbs)' };
+                { length: '(m)', area: 'Meters²', weight: '(kg)' } :
+                { length: '(ft)', area: 'Sq Ft', weight: '(lbs)' };
             
             document.querySelectorAll('[data-unit]').forEach(el => {
                 const unitType = el.getAttribute('data-unit');
