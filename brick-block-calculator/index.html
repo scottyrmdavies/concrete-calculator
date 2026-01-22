@@ -273,11 +273,11 @@
                 <thead>
                     <tr>
                         <th>Section</th>
-                        <th>Length (m)</th>
-                        <th>Height (m)</th>
-                        <th>Meters²</th>
-                        <th>Sand (kg)</th>
-                        <th>Cement (kg)</th>
+                        <th>Length <span data-unit="length">(m)</span></th>
+                        <th>Height <span data-unit="length">(m)</span></th>
+                        <th><span data-unit="area">Meters²</span></th>
+                        <th>Sand <span data-unit="weight">(kg)</span></th>
+                        <th>Cement <span data-unit="weight">(kg)</span></th>
                         <th>Quantity (Units)</th>
                         <th>Actions</th>
                     </tr>
@@ -292,15 +292,15 @@
             <h2 class="section-title text-[var(--calidwell-dark-text)]">Totals</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Total Meters²</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Total <span data-unit="area">Meters²</span></label>
                     <div id="totalMeters2" class="input-display">0.00</div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Total Sand (kg)</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Total Sand <span data-unit="weight">(kg)</span></label>
                     <div id="totalSand" class="input-display">0.00</div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Total Cement (kg)</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Total Cement <span data-unit="weight">(kg)</span></label>
                     <div id="totalCement" class="input-display">0.00</div>
                 </div>
                 <div>
