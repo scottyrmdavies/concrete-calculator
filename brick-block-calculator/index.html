@@ -570,7 +570,27 @@
             
             console.log('Calling updateUnits...');
             updateUnits();
+            
+            // Update data-labels in existing rows
+            updateRowLabels();
+            
             if (typeof calculateAll === 'function') calculateAll();
+        }
+        
+        function updateRowLabels() {
+            const units = currentRegion === 'UK' ? 
+                { length: '(m)', area: 'Meters²', weight: '(kg)' } :
+                { length: '(ft)', area: 'Sq Ft', weight: '(lbs)' };
+            
+            document.querySelectorAll('#wallTableBody tr').forEach(row => {
+                row.querySelectorAll('td').forEach((td, index) => {
+                    if (index === 1) td.setAttribute('data-label', `Length ${units.length}`);
+                    if (index === 2) td.setAttribute('data-label', `Height ${units.length}`);
+                    if (index === 3) td.setAttribute('data-label', units.area);
+                    if (index === 4) td.setAttribute('data-label', `Sand ${units.weight}`);
+                    if (index === 5) td.setAttribute('data-label', `Cement ${units.weight}`);
+                });
+            });
         }
         
         function updateUnits() {
