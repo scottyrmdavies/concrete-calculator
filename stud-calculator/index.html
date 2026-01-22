@@ -26,7 +26,10 @@
 </head>
 <body class="p-4 sm:p-6 md:p-8">
     <div class="max-w-5xl mx-auto bg-white p-6 md:p-8 rounded-lg shadow-xl">
-        <h1 class="text-3xl font-bold text-[var(--calidwell-dark-text)] mb-6 text-center">Stud Work Calculator</h1>
+        <h1 class="text-3xl font-bold text-[var(--calidwell-dark-text)] mb-6 text-center" data-regional-text>Stud Work Calculator</h1>
+
+        <!-- Region Toggle -->
+        <div id="regionToggleContainer"></div>
 
         <!-- Walls -->
         <div class="mb-6 p-4 bg-[var(--calidwell-light-bg-2)] rounded-lg border border-[var(--calidwell-border-grey)]">
@@ -39,8 +42,8 @@
                     <thead class="bg-[var(--calidwell-light-bg-1)] text-[var(--calidwell-general-text)]">
                         <tr>
                             <th class="text-left px-3 py-2">Name</th>
-                            <th class="text-left px-3 py-2">Length (m)</th>
-                            <th class="text-left px-3 py-2">Height (m)</th>
+                            <th class="text-left px-3 py-2" data-regional-text id="lengthHeader">Length (m)</th>
+                            <th class="text-left px-3 py-2" data-regional-text id="heightHeader">Height (m)</th>
                             <th class="text-left px-3 py-2">Centers</th>
                             <th class="text-left px-3 py-2">Noggins Rows</th>
                             <th class="text-left px-3 py-2">Qty</th>
@@ -63,8 +66,8 @@
                     <thead class="bg-[var(--calidwell-light-bg-1)] text-[var(--calidwell-general-text)]">
                         <tr>
                             <th class="text-left px-3 py-2">Name</th>
-                            <th class="text-left px-3 py-2">Width (m)</th>
-                            <th class="text-left px-3 py-2">Height (m)</th>
+                            <th class="text-left px-3 py-2" data-regional-text id="widthHeader">Width (m)</th>
+                            <th class="text-left px-3 py-2" data-regional-text id="openingHeightHeader">Height (m)</th>
                             <th class="text-left px-3 py-2">Qty</th>
                             <th class="text-left px-3 py-2">Actions</th>
                         </tr>
@@ -74,17 +77,10 @@
             </div>
         </div>
 
-        <!-- Units + Parameters -->
+        <!-- Parameters -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div class="md:col-span-3">
-                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Units</label>
-                <select id="unitSystem" class="quantity-input text-[var(--calidwell-dark-text)] max-w-xs">
-                    <option value="metric" selected>Metric (m, mm, m²)</option>
-                    <option value="imperial">Imperial (ft, in, ft²)</option>
-                </select>
-            </div>
             <div>
-                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1">Corner Allowance (m per internal corner)</label>
+                <label class="block text-sm font-medium text-[var(--calidwell-general-text)] mb-1" id="cornerAllowanceLabel">Corner Allowance (m per internal corner)</label>
                 <input id="cornerAllowanceM" type="number" step="0.1" class="quantity-input text-[var(--calidwell-dark-text)]" placeholder="e.g. 0.6">
             </div>
             <div>
@@ -335,6 +331,102 @@
             // Corner allowance label left as meters but value converted when calculating
             calculate();
         }
+    </script>
+
+    <script type="module">
+        import { RegionManager, createRegionToggle } from '../region-toggle.js';
+        import { getRegionalConfig, updateAllRegionalText } from '../regional-config.js';
+        import { parseFeetInches, formatFeetInches, feetToMeters, metersToFeet } from '../unit-converter.js';
+
+        // Initialize region manager
+        const regionManager = new RegionManager('UK');
+        
+        // Create and add toggle
+        const toggleContainer = document.getElementById('regionToggleContainer');
+        const toggle = createRegionToggle(regionManager, {
+            showLabels: true,
+            showDescription: true,
+            compact: false
+        });
+        toggleContainer.appendChild(toggle);
+
+        // Update UI when region changes
+        regionManager.onChange((region, config) => {
+            updateUIForRegion(region, config);
+            calculate();
+        });
+
+        function updateUIForRegion(region, config) {
+            // Update vocabulary
+            updateAllRegionalText(region);
+            
+            // Update unit labels in headers
+            const lengthHeader = document.getElementById('lengthHeader');
+            const heightHeader = document.getElementById('heightHeader');
+            const widthHeader = document.getElementById('widthHeader');
+            const openingHeightHeader = document.getElementById('openingHeightHeader');
+            const cornerLabel = document.getElementById('cornerAllowanceLabel');
+            
+            const unit = region === 'US' ? 'ft' : 'm';
+            if (lengthHeader) lengthHeader.textContent = `Length (${unit})`;
+            if (heightHeader) heightHeader.textContent = `Height (${unit})`;
+            if (widthHeader) widthHeader.textContent = `Width (${unit})`;
+            if (openingHeightHeader) openingHeightHeader.textContent = `Height (${unit})`;
+            if (cornerLabel) cornerLabel.textContent = `Corner Allowance (${unit} per internal corner)`;
+            
+            // Update stud spacing options in all selects
+            document.querySelectorAll('select.quantity-input').forEach(select => {
+                const currentVal = select.value;
+                if (region === 'US') {
+                    select.innerHTML = `
+                        <option value="406.4">16" OC</option>
+                        <option value="609.6">24" OC</option>
+                    `;
+                    select.value = currentVal === '400' ? '406.4' : currentVal === '600' ? '609.6' : '406.4';
+                } else {
+                    select.innerHTML = `
+                        <option value="400">400 mm</option>
+                        <option value="600">600 mm</option>
+                    `;
+                    select.value = currentVal === '406.4' ? '400' : currentVal === '609.6' ? '600' : '400';
+                }
+            });
+        }
+
+        // Override the original calculate to use region-aware parsing
+        const originalCalculate = window.calculate;
+        window.calculate = function() {
+            const region = regionManager.getRegion();
+            const config = regionManager.getConfig();
+            
+            // Call original but results will be converted for display
+            originalCalculate();
+            
+            // Update result units
+            const areaEl = document.getElementById('totalArea');
+            const nogginEl = document.getElementById('nogginLm');
+            const platesEl = document.getElementById('platesLm');
+            const cornerEl = document.getElementById('cornerLm');
+            const totalEl = document.getElementById('totalLm');
+            
+            if (region === 'US' && areaEl && areaEl.textContent) {
+                // Extract numeric values and convert
+                const areaMatch = areaEl.textContent.match(/([\d.]+)/);
+                const nogginMatch = nogginEl.textContent.match(/([\d.]+)/);
+                const platesMatch = platesEl.textContent.match(/([\d.]+)/);
+                const cornerMatch = cornerEl.textContent.match(/([\d.]+)/);
+                const totalMatch = totalEl.textContent.match(/([\d.]+)/);
+                
+                if (areaMatch) areaEl.textContent = (parseFloat(areaMatch[1]) * 10.764).toFixed(2) + ' sq ft';
+                if (nogginMatch) nogginEl.textContent = (parseFloat(nogginMatch[1]) * 3.281).toFixed(2) + ' ft';
+                if (platesMatch) platesEl.textContent = (parseFloat(platesMatch[1]) * 3.281).toFixed(2) + ' ft';
+                if (cornerMatch) cornerEl.textContent = (parseFloat(cornerMatch[1]) * 3.281).toFixed(2) + ' ft';
+                if (totalMatch) totalEl.textContent = (parseFloat(totalMatch[1]) * 3.281).toFixed(2) + ' ft';
+            }
+        };
+
+        // Initial update
+        updateUIForRegion(regionManager.getRegion(), regionManager.getConfig());
     </script>
 </body>
 </html>

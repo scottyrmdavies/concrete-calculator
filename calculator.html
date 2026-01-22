@@ -56,6 +56,9 @@
 </head>
 <body class="p-4 sm:p-6 md:p-8">
     <div class="max-w-6xl mx-auto bg-white p-6 md:p-8 rounded-lg shadow-xl">
+        <!-- Region Switcher -->
+        <div id="regionSwitcher"></div>
+
         <h1 class="text-3xl font-bold text-[var(--calidwell-dark-text)] mb-6 text-center">Concrete Calculator</h1>
 
         <!-- Material Properties & Bulking Factors (Reference Section) -->
@@ -66,7 +69,7 @@
                 <thead class="bg-[var(--calidwell-light-bg-1)]">
                     <tr>
                         <th class="py-2 px-3 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider rounded-tl-md">Material Type</th>
-                        <th class="py-2 px-3 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider">In-Situ Density (tonnes/m³)</th>
+                        <th class="py-2 px-3 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider">In-Situ Density <span data-unit="density">(tonnes/m³)</span></th>
                         <th class="py-2 px-3 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider rounded-tr-md">Bulking Factor</th>
                     </tr>
                 </thead>
@@ -87,14 +90,15 @@
                 <thead class="bg-[var(--calidwell-light-bg-1)]">
                     <tr>
                         <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider">Item/Description</th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider min-w-[100px]">Length (m)</th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider min-w-[100px]">Width (m)</th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider min-w-[100px]">Depth (m)</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider min-w-[100px]">Length <span data-unit="length">(m)</span></th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider min-w-[100px]">Width <span data-unit="length">(m)</span></th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider min-w-[100px]">Depth <span data-unit="length">(m)</span></th>
                         <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider min-w-[140px]">Material Type</th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider">Calculated Volume (m³)</th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider">Material Weight (tonnes)</th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider">Excavated Volume (m³)</th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider">Excavated Weight (tonnes)</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider">Calculated Volume <span data-unit="volume">(m³)</span></th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider">Material Weight <span data-unit="weightHeavy">(tonnes)</span></th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider">Excavated Volume <span data-unit="volume">(m³)</span></th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider">Excavated Weight <span data-unit="weightHeavy">(tonnes)</span></th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider"><span data-i18n="skip">Skip</span> Bags</th>
                         <th class="py-3 px-4 text-left text-xs font-medium text-[var(--calidwell-general-text)] uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
@@ -200,6 +204,9 @@
                     <span class="excavated-weight text-[var(--calidwell-general-text)] font-medium">0.00</span>
                 </td>
                 <td class="py-2 px-4 whitespace-nowrap">
+                    <span class="skip-bags text-[var(--calidwell-general-text)] font-medium">0</span>
+                </td>
+                <td class="py-2 px-4 whitespace-nowrap">
                     <button class="remove-item-btn bg-[var(--calidwell-primary-accent)] hover:bg-[var(--calidwell-secondary-accent)] text-white p-2 rounded-md transition duration-200 ease-in-out transform hover:scale-105">Remove</button>
                 </td>
             `;
@@ -235,17 +242,20 @@
             const materialWeightSpan = row.querySelector('.material-weight');
             const excavatedVolumeSpan = row.querySelector('.excavated-volume');
             const excavatedWeightSpan = row.querySelector('.excavated-weight');
+            const skipBagsSpan = row.querySelector('.skip-bags');
 
             let calculatedVolume = 0;
             let materialWeight = 0;
             let excavatedVolume = 0;
             let excavatedWeight = 0;
+            let skipBags = 0;
 
             if (isNaN(length) || isNaN(width) || isNaN(depth) || !materialType) {
                 calculatedVolumeSpan.textContent = '0.00';
                 materialWeightSpan.textContent = '0.00';
                 excavatedVolumeSpan.textContent = '0.00';
                 excavatedWeightSpan.textContent = '0.00';
+                skipBagsSpan.textContent = '0';
                 return; // Exit if inputs are invalid
             }
 
@@ -260,6 +270,7 @@
                     materialWeightSpan.textContent = materialWeight.toFixed(2);
                     excavatedVolumeSpan.textContent = '0.00'; // No excavation volume for concrete
                     excavatedWeightSpan.textContent = '0.00'; // No excavation weight for concrete
+                    skipBagsSpan.textContent = '0';
                 } else {
                     materialWeightSpan.textContent = '0.00'; // Material weight not applicable for excavated material
                     excavatedVolume = calculatedVolume * properties.bulkingFactor;
@@ -267,12 +278,17 @@
                     excavatedWeight = calculatedVolume * properties.density;
                     excavatedVolumeSpan.textContent = excavatedVolume.toFixed(2);
                     excavatedWeightSpan.textContent = excavatedWeight.toFixed(2);
+                    // Calculate skip bags (typical skip bag ~0.9m³ or 1 cubic yard)
+                    const skipBagSize = window.regionSwitcher?.getCurrentRegion() === 'US' ? 0.765 : 0.9; // US: 1 cu yard, UK: 0.9 m³
+                    skipBags = Math.ceil(excavatedVolume / skipBagSize);
+                    skipBagsSpan.textContent = skipBags;
                 }
             } else {
                 // Reset if material type is not recognized (shouldn't happen with dropdown)
                 materialWeightSpan.textContent = '0.00';
                 excavatedVolumeSpan.textContent = '0.00';
                 excavatedWeightSpan.textContent = '0.00';
+                skipBagsSpan.textContent = '0';
             }
             calculateAll(); // Update total summaries after each item calculation
         }
@@ -318,5 +334,29 @@
         createItemRow({ description: 'Oversite Dig', length: 9.3, width: 2.8, depth: 0.3, materialType: 'Soil' });
         createItemRow(); // Blank row for new entry
     </script>
+
+    <script type="module">
+        import { RegionSwitcher, createRegionSwitcher } from './region-switcher.js';
+
+        // Initialize region switcher
+        const switcher = new RegionSwitcher('UK');
+        window.regionSwitcher = switcher; // Make available globally for skip bag calculations
+        
+        const switcherElement = createRegionSwitcher(switcher);
+        document.getElementById('regionSwitcher').appendChild(switcherElement);
+
+        // Recalculate when region changes (for unit conversions and skip bags)
+        switcher.onChange(() => {
+            if (typeof calculateAll === 'function') {
+                const rows = document.querySelectorAll('#itemsContainer tr');
+                rows.forEach(row => {
+                    if (typeof calculateItem === 'function') {
+                        calculateItem(row);
+                    }
+                });
+                calculateAll();
+            }
+        });
+    </script>
 </body>
-</html> 
+</html>
