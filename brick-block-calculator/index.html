@@ -533,6 +533,7 @@
         }
         
         function switchRegion(region) {
+            console.log('Switching to region:', region);
             currentRegion = region;
             const ukBtn = document.getElementById('ukBtn');
             const usBtn = document.getElementById('usBtn');
@@ -557,18 +558,25 @@
                 ukBtn.style.color = '#4F5655';
             }
             
+            console.log('Calling updateUnits...');
             updateUnits();
             if (typeof calculateAll === 'function') calculateAll();
         }
         
         function updateUnits() {
+            console.log('UpdateUnits called, current region:', currentRegion);
             const units = currentRegion === 'UK' ? 
                 { length: '(m)', area: 'Meters²', weight: '(kg)' } :
                 { length: '(ft)', area: 'Sq Ft', weight: '(lbs)' };
             
-            document.querySelectorAll('[data-unit]').forEach(el => {
+            const elements = document.querySelectorAll('[data-unit]');
+            console.log('Found', elements.length, 'data-unit elements');
+            
+            elements.forEach(el => {
                 const unitType = el.getAttribute('data-unit');
-                el.textContent = units[unitType] || '';
+                const newText = units[unitType] || '';
+                console.log('Updating', unitType, 'to', newText);
+                el.textContent = newText;
             });
         }
     </script>
