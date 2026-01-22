@@ -245,7 +245,7 @@
 
         <!-- Material Ratios Section -->
         <div class="mb-8 p-6 bg-[var(--calidwell-light-bg-2)] rounded-lg shadow-inner">
-            <h2 class="section-title text-[var(--calidwell-dark-text)]">Material Ratios (per <span data-unit="area">square meter</span>)</h2>
+            <h2 class="section-title text-[var(--calidwell-dark-text)]">Material Ratios (per <span data-unit="areaText">square meter</span>)</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
                     <label for="sandRatio" class="block text-sm font-medium text-gray-700 mb-1">Sand <span data-unit="densityRatio">(kg/m²)</span></label>
@@ -596,8 +596,22 @@
         function updateUnits() {
             console.log('UpdateUnits called, current region:', currentRegion);
             const units = currentRegion === 'UK' ? 
-                { length: '(m)', area: 'Meters²', weight: '(kg)', densityRatio: '(kg/m²)', countRatio: '(units/m²)' } :
-                { length: '(ft)', area: 'Sq Ft', weight: '(lbs)', densityRatio: '(lbs/sq ft)', countRatio: '(units/sq ft)' };
+                { 
+                    length: '(m)', 
+                    area: 'Meters²', 
+                    areaText: 'square meter',
+                    weight: '(kg)', 
+                    densityRatio: '(kg/m²)', 
+                    countRatio: '(units/m²)' 
+                } :
+                { 
+                    length: '(ft)', 
+                    area: 'Sq Ft', 
+                    areaText: 'square foot',
+                    weight: '(lbs)', 
+                    densityRatio: '(lbs/sq ft)', 
+                    countRatio: '(units/sq ft)' 
+                };
             
             const elements = document.querySelectorAll('[data-unit]');
             console.log('Found', elements.length, 'data-unit elements');
