@@ -265,8 +265,16 @@
             const properties = materialProperties[materialType];
 
             if (properties) {
+                // Adjust density based on region
+                let densityFactor = properties.density; // Default UK: tonnes/m³
+                if (currentRegion === 'US') {
+                    // Convert tonnes/m³ to tons/cubic yard
+                    // 1 tonne/m³ = 0.8428 tons/cubic yard
+                    densityFactor = properties.density * 0.8428;
+                }
+                
                 if (materialType === "Concrete") {
-                    materialWeight = calculatedVolume * properties.density;
+                    materialWeight = calculatedVolume * densityFactor;
                     materialWeightSpan.textContent = materialWeight.toFixed(2);
                     excavatedVolumeSpan.textContent = '0.00'; // No excavation volume for concrete
                     excavatedWeightSpan.textContent = '0.00'; // No excavation weight for concrete
@@ -275,7 +283,7 @@
                     materialWeightSpan.textContent = '0.00'; // Material weight not applicable for excavated material
                     excavatedVolume = calculatedVolume * properties.bulkingFactor;
                     // Weight should not increase with bulking; mass is conserved. Use in-situ density only.
-                    excavatedWeight = calculatedVolume * properties.density;
+                    excavatedWeight = calculatedVolume * densityFactor;
                     excavatedVolumeSpan.textContent = excavatedVolume.toFixed(2);
                     excavatedWeightSpan.textContent = excavatedWeight.toFixed(2);
                     // Calculate skip bags (typical skip bag ~0.9m³ or 1 cubic yard)
