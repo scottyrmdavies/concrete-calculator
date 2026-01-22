@@ -374,13 +374,19 @@
             const tableBody = document.getElementById('wallTableBody');
             const row = document.createElement('tr');
             row.id = rowId;
+            
+            // Get current units
+            const units = currentRegion === 'UK' ? 
+                { length: '(m)', area: 'Meters²', weight: '(kg)' } :
+                { length: '(ft)', area: 'Sq Ft', weight: '(lbs)' };
+            
             row.innerHTML = `
                 <td data-label="Section">Wall ${sectionCounter}</td>
-                <td data-label="Length (m)"><input type="number" value="${length}" step="0.1" class="length-input w-full rounded-md p-2 border border-[var(--calidwell-border-grey)] focus:outline-none focus:ring-2 focus:ring-[var(--calidwell-primary-accent)]"></td>
-                <td data-label="Height (m)"><input type="number" value="${height}" step="0.1" class="height-input w-full rounded-md p-2 border border-[var(--calidwell-border-grey)] focus:outline-none focus:ring-2 focus:ring-[var(--calidwell-primary-accent)]"></td>
-                <td data-label="Meters²" class="meters2-display input-display">0.00</td>
-                <td data-label="Sand (kg)" class="sand-display input-display">0.00</td>
-                <td data-label="Cement (kg)" class="cement-display input-display">0.00</td>
+                <td data-label="Length ${units.length}"><input type="number" value="${length}" step="0.1" class="length-input w-full rounded-md p-2 border border-[var(--calidwell-border-grey)] focus:outline-none focus:ring-2 focus:ring-[var(--calidwell-primary-accent)]"></td>
+                <td data-label="Height ${units.length}"><input type="number" value="${height}" step="0.1" class="height-input w-full rounded-md p-2 border border-[var(--calidwell-border-grey)] focus:outline-none focus:ring-2 focus:ring-[var(--calidwell-primary-accent)]"></td>
+                <td data-label="${units.area}" class="meters2-display input-display">0.00</td>
+                <td data-label="Sand ${units.weight}" class="sand-display input-display">0.00</td>
+                <td data-label="Cement ${units.weight}" class="cement-display input-display">0.00</td>
                 <td data-label="Quantity (Units)" class="quantity-display input-display">0.00</td>
                 <td data-label="Actions"><button class="btn btn-danger remove-row-btn"><i class="fas fa-trash-alt"></i></button></td>
             `;
