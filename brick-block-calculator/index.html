@@ -410,16 +410,40 @@
             bricksRatioInput.classList.remove('highlight-input');
             blocksRatioInput.classList.remove('highlight-input');
 
+            // Region-specific conversion factor for kg/m² to lbs/sq ft
+            const isUS = currentRegion === 'US';
+            const densityFactor = isUS ? 0.2048 : 1; // kg/m² to lbs/sq ft
+            const countFactorBricks = isUS ? 0.0929 : 1; // units/m² to units/sq ft
+            const countFactorBlocks = isUS ? 0.0929 : 1; // units/m² to units/sq ft
+
             if (calculationType === 'bricks') {
-                sandRatioInput.value = wallThickness === 'single' ? '30' : '60';
-                cementRatioInput.value = wallThickness === 'single' ? '7.5' : '15';
-                bricksRatioInput.value = wallThickness === 'single' ? '60' : '120';
+                // UK: 30 kg/m² sand, 7.5 kg/m² cement, 60 bricks/m²
+                // US: ~6.15 lbs/sq ft sand, ~1.54 lbs/sq ft cement, ~5.6 bricks/sq ft
+                const sandSingle = isUS ? (30 * densityFactor).toFixed(2) : '30';
+                const sandDouble = isUS ? (60 * densityFactor).toFixed(2) : '60';
+                const cementSingle = isUS ? (7.5 * densityFactor).toFixed(2) : '7.5';
+                const cementDouble = isUS ? (15 * densityFactor).toFixed(2) : '15';
+                const bricksSingle = isUS ? (60 * countFactorBricks).toFixed(1) : '60';
+                const bricksDouble = isUS ? (120 * countFactorBricks).toFixed(1) : '120';
+                
+                sandRatioInput.value = wallThickness === 'single' ? sandSingle : sandDouble;
+                cementRatioInput.value = wallThickness === 'single' ? cementSingle : cementDouble;
+                bricksRatioInput.value = wallThickness === 'single' ? bricksSingle : bricksDouble;
                 bricksRatioInput.classList.add('highlight-input');
                 document.getElementById('unitsLabel').textContent = 'Bricks Needed';
             } else {
-                sandRatioInput.value = wallThickness === 'single' ? '18' : '36';
-                cementRatioInput.value = wallThickness === 'single' ? '4.5' : '9';
-                blocksRatioInput.value = wallThickness === 'single' ? '10' : '20';
+                // UK: 18 kg/m² sand, 4.5 kg/m² cement, 10 blocks/m²
+                // US: ~3.69 lbs/sq ft sand, ~0.92 lbs/sq ft cement, ~0.93 blocks/sq ft
+                const sandSingle = isUS ? (18 * densityFactor).toFixed(2) : '18';
+                const sandDouble = isUS ? (36 * densityFactor).toFixed(2) : '36';
+                const cementSingle = isUS ? (4.5 * densityFactor).toFixed(2) : '4.5';
+                const cementDouble = isUS ? (9 * densityFactor).toFixed(2) : '9';
+                const blocksSingle = isUS ? (10 * countFactorBlocks).toFixed(2) : '10';
+                const blocksDouble = isUS ? (20 * countFactorBlocks).toFixed(2) : '20';
+                
+                sandRatioInput.value = wallThickness === 'single' ? sandSingle : sandDouble;
+                cementRatioInput.value = wallThickness === 'single' ? cementSingle : cementDouble;
+                blocksRatioInput.value = wallThickness === 'single' ? blocksSingle : blocksDouble;
                 blocksRatioInput.classList.add('highlight-input');
                 document.getElementById('unitsLabel').textContent = 'Blocks Needed';
             }
@@ -570,6 +594,9 @@
             
             console.log('Calling updateUnits...');
             updateUnits();
+            
+            // Update material ratios when region changes
+            updateDefaultRatios();
             
             // Update data-labels in existing rows
             updateRowLabels();
